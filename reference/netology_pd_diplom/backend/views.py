@@ -7,7 +7,7 @@ from django.core.validators import URLValidator
 from django.db import IntegrityError
 from django.db.models import Q, Sum, F
 from django.http import JsonResponse
-from requests import get
+from client import get
 from rest_framework.authtoken.models import Token
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
@@ -159,7 +159,7 @@ class ShopView(ListAPIView):
     """
     Класс для просмотра списка магазинов
     """
-    queryset = Shop.objects.filter(state=True)
+    queryset = Shop.objects.all()
     serializer_class = ShopSerializer
 
 

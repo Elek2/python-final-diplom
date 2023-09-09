@@ -37,7 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'main',
+    'rest_framework',
+    'rest_framework.authtoken',
+    'main',  # Наш проект
 ]
 
 MIDDLEWARE = [
@@ -77,7 +79,7 @@ WSGI_APPLICATION = 'orders.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'ordersDB',
+        'NAME': 'orders_diplom_DB',
         'USER': 'postgres',
         'PASSWORD': 'nicaragua21',
         'HOST': '127.0.0.1',
@@ -104,6 +106,22 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTH_USER_MODEL = 'main.User'
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.UserRateThrottle',  # Проверка запросов в минуту от зарегистрированного пользователя
+        'rest_framework.throttling.AnonRateThrottle',  # Проверка запросов в минуту от анонимного пользователя
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'user': '20/minute',
+        'anon': '10/minute'
+    },
+
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
@@ -131,3 +149,6 @@ MEDIA_URL = '/media/'
 # устанавливает абсолютный путь к директории, где хранятся изображениями,
 # без него все будут сохраняться в корневом каталоге
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# определяет автоматическое присвоение первичного ключа в таблицах
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

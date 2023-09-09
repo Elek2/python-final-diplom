@@ -1,8 +1,38 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.base_user import BaseUserManager
+from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.utils.text import slugify
+
+
+class UserManager(BaseUserManager):
+
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError("The Email field must be set")
+        email = self.normalize_email(email)
+        user = self.model(email=email, password=password, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        extra_fields.setdefault("is_staff", True)
+        extra_fields.setdefault("is_superuser", True)
+        return self.create_user(email, password, **extra_fields)
 
 
 # Create your models here.
+class User(AbstractUser):
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
+    email = models.EmailField(unique=True, blank=False, null=False)
+    username = models.CharField(max_length=150, unique=False)
+    # first_name = models.CharField(verbose_name='Имя', max_length=150, blank=True)
+    # last_name = models.CharField(verbose_name='Фамилия', max_length=150, blank=True)
+    # second_name = models.CharField(verbose_name='Отчество', max_length=40, blank=True)
+    company = models.CharField(verbose_name='Компания', max_length=40, blank=True)
+    position = models.CharField(verbose_name='Должность', max_length=40, blank=True)
+    objects = UserManager()
 
 
 class Shop(models.Model):
@@ -44,6 +74,13 @@ class Category(models.Model):
 
 class Product(models.Model):
     name = models.CharField(max_length=100, verbose_name='Название')
+    slug = models.SlugField(verbose_name='Slug-название', allow_unicode=True)
+
+    # Генерируем slug на основе имени товара
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
     category = models.ForeignKey(Category,
                                  verbose_name='Категории',
                                  related_name='products',
@@ -77,12 +114,7 @@ class ProductInfo(models.Model):
         blank=True,
         null=True,
     )
-    name = models.CharField(
-        max_length=120,
-        verbose_name='Описание товара',
-        blank=True,
-        null=True,
-    )
+
     quantity = models.IntegerField(verbose_name='Количество')
     price = models.IntegerField(verbose_name='Цена')
     price_rrc = models.IntegerField(verbose_name='Рекомендованная розничная цена')
@@ -104,7 +136,7 @@ class ProductParameter(models.Model):
         related_name='product_info',
         on_delete=models.CASCADE
     )
-    value = models.IntegerField(verbose_name='Значение')
+    value = models.CharField(max_length=100, verbose_name='Значение')
 
     class Meta:
         db_table = "Parameter"
@@ -159,10 +191,10 @@ class OrderItem(models.Model):
     value = models.IntegerField(verbose_name='Значение')
 
     class Meta:
-        db_table = "Order"
-        verbose_name = 'Заказ'
-        verbose_name_plural = 'Заказы'
-        ordering = ['-dt']
+        db_table = "Order_item"
+        verbose_name = 'Состав заказа'
+        verbose_name_plural = 'Состав заказов'
+        ordering = ['id']
 
     def __str__(self):
-        return f"Order #{self.id}"
+        return f"Order #{self.order}"
