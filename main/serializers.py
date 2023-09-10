@@ -42,33 +42,57 @@ class UserAuthTokenSerializer(serializers.Serializer):
         return attrs
 
 
-class ProductSerializer(serializers.ModelSerializer):
+class CategorySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Product
-        fields = ['name', 'category', 'slug']
-        read_only_fields = ('id',)
+        model = Category
 
-    def create(self, validated_data):
-        # Генерируем slug на основе имени товара
-        name = validated_data['name']
-        slug = slugify(name)
 
-        product = Product.objects.create(name=name, slug=slug, **validated_data)
-
-        return product
+class ProductParameterSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProductParameter
+        fields = ['name', 'value']
 
 
 class ProductInfoSerializer(serializers.ModelSerializer):
+    product = serializers.StringRelatedField()
+    shop = serializers.StringRelatedField()
+    product_param = ProductParameterSerializer(many=True)
 
     class Meta:
         model = ProductInfo
-        fields = (
-            'product__name',
-            'product__category__name',
-            'shop__name',
-            'model',
-            'quantity',
-            'price_rrc',
-            'product_info'
-        )
+        fields = ['model', 'product', 'shop', 'quantity', 'price_rrc', 'product_param']
         read_only_fields = ('id',)
+
+
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    category = serializers.StringRelatedField()
+    product_info = ProductInfoSerializer(many=True)
+
+
+    class Meta:
+        model = Product
+        # fields = ('__all__')
+        fields = ['name', 'category', 'product_info']
+        read_only_fields = ('id',)
+
+
+
+
+
+# class ProductCompareSerializer(serializers.ModelSerializer):
+#     shop = serializers.StringRelatedField()
+#
+#     class Meta:
+#         model = ProductInfo
+#         fields = (
+#             'shop',
+#             'quantity',
+#             'price_rrc',
+#         )
+        # read_only_fields = ('id',)
+
+
+
+

@@ -1,7 +1,7 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.utils.text import slugify
+from slugify import slugify
 
 
 class UserManager(BaseUserManager):
@@ -58,9 +58,9 @@ class Shop(models.Model):
 class Category(models.Model):
     name = models.CharField(max_length=50, verbose_name='Название')
     shops = models.ManyToManyField(Shop,
-                                   verbose_name='Магазины',
-                                   related_name='categories',
-                                   )
+        verbose_name='Магазины',
+        related_name='categories',
+    )
 
     class Meta:
         db_table = "Category"
@@ -82,10 +82,10 @@ class Product(models.Model):
         super().save(*args, **kwargs)
 
     category = models.ForeignKey(Category,
-                                 verbose_name='Категории',
-                                 related_name='products',
-                                 on_delete=models.CASCADE
-                                 )
+        verbose_name='Категории',
+        related_name='products',
+        on_delete=models.CASCADE
+    )
 
     class Meta:
         db_table = "Product"
@@ -99,15 +99,15 @@ class Product(models.Model):
 
 class ProductInfo(models.Model):
     product = models.ForeignKey(Product,
-                                verbose_name='Товар',
-                                related_name='product_info',
-                                on_delete=models.CASCADE
-                                )
+        verbose_name='Товар',
+        related_name='product_info',
+        on_delete=models.CASCADE
+    )
     shop = models.ForeignKey(Shop,
-                             verbose_name='Магазин',
-                             related_name='product_info',
-                             on_delete=models.CASCADE
-                             )
+        verbose_name='Магазин',
+        related_name='product_info',
+        on_delete=models.CASCADE
+    )
     model = models.CharField(
         max_length=120,
         verbose_name='Модель товара',
@@ -125,7 +125,7 @@ class ProductInfo(models.Model):
         verbose_name_plural = 'Информация о товарах'
 
     def __str__(self):
-        return self.name
+        return Product.objects.get(id=self.product).name
 
 
 class ProductParameter(models.Model):
@@ -133,7 +133,7 @@ class ProductParameter(models.Model):
     product_info = models.ForeignKey(
         ProductInfo,
         verbose_name='Информация о продукте',
-        related_name='product_info',
+        related_name='product_param',
         on_delete=models.CASCADE
     )
     value = models.CharField(max_length=100, verbose_name='Значение')
@@ -150,17 +150,24 @@ class ProductParameter(models.Model):
 
 class Order(models.Model):
     status_choises = (
+        ('basket', 'В корзине'),
         ('done', 'Готов'),
         ('processed', 'В работе'),
     )
 
-    user = models.ForeignKey(User,
-                             verbose_name='Пользователь',
-                             related_name='Order',
-                             on_delete=models.CASCADE
-                             )
+    user = models.ForeignKey(
+        User,
+        verbose_name='Пользователь',
+        related_name='Order',
+        on_delete=models.CASCADE
+    )
     dt = models.DateTimeField(auto_now_add=True, verbose_name='Время заказа')
-    status = models.CharField(max_length=20, verbose_name='Статус', choices=status_choises)
+    status = models.CharField(
+        max_length=20,
+        verbose_name='Статус',
+        choices=status_choises,
+        default='basket'
+    )
 
     class Meta:
         db_table = "Order"
@@ -174,20 +181,20 @@ class Order(models.Model):
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order,
-                              verbose_name='Заказ',
-                              related_name='OrderItem',
-                              on_delete=models.CASCADE
-                              )
+        verbose_name='Заказ',
+        related_name='OrderItem',
+        on_delete=models.CASCADE
+    )
     product = models.ForeignKey(Product,
-                                verbose_name="Товар",
-                                related_name='OrderItem',
-                                on_delete=models.CASCADE
-                                )
+        verbose_name="Товар",
+        related_name='OrderItem',
+        on_delete=models.CASCADE
+    )
     shop = models.ForeignKey(Shop,
-                             verbose_name="Магазин",
-                             related_name='OrderItem',
-                             on_delete=models.CASCADE
-                             )
+        verbose_name="Магазин",
+        related_name='OrderItem',
+        on_delete=models.CASCADE
+    )
     value = models.IntegerField(verbose_name='Значение')
 
     class Meta:

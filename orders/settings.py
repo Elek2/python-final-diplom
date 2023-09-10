@@ -112,6 +112,9 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
+    # 'DEFAULT_PERMISSION_CLASSES': (
+    #     'rest_framework.permissions.IsAuthenticated'
+    # ),
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.UserRateThrottle',  # Проверка запросов в минуту от зарегистрированного пользователя
         'rest_framework.throttling.AnonRateThrottle',  # Проверка запросов в минуту от анонимного пользователя
