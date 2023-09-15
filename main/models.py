@@ -1,5 +1,6 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import MinValueValidator
 from django.db import models
 from slugify import slugify
 
@@ -26,14 +27,38 @@ class User(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
     email = models.EmailField(unique=True, blank=False, null=False)
-    username = models.CharField(max_length=150, unique=False)
+    username = models.CharField(verbose_name='Имя', max_length=150, unique=False)
     # first_name = models.CharField(verbose_name='Имя', max_length=150, blank=True)
-    # last_name = models.CharField(verbose_name='Фамилия', max_length=150, blank=True)
-    # second_name = models.CharField(verbose_name='Отчество', max_length=40, blank=True)
+    last_name = models.CharField(verbose_name='Фамилия', max_length=150, blank=True)
+    second_name = models.CharField(verbose_name='Отчество', max_length=40, blank=True)
     company = models.CharField(verbose_name='Компания', max_length=40, blank=True)
     position = models.CharField(verbose_name='Должность', max_length=40, blank=True)
     objects = UserManager()
 
+    class Meta:
+        db_table = "User"
+        verbose_name = 'Пользователь'
+        verbose_name_plural = "Пользователи"
+
+
+class Contact(models.Model):
+    user = models.ForeignKey(User, verbose_name='Пользователь',
+                             related_name='contacts', blank=True,
+                             on_delete=models.CASCADE)
+    city = models.CharField(max_length=50, verbose_name='Город')
+    street = models.CharField(max_length=100, verbose_name='Улица')
+    house = models.CharField(max_length=15, verbose_name='Дом', blank=True)
+    structure = models.CharField(max_length=15, verbose_name='Корпус', blank=True)
+    apartment = models.CharField(max_length=15, verbose_name='Квартира', blank=True)
+    phone = models.CharField(max_length=20, verbose_name='Телефон')
+
+    class Meta:
+        db_table = "Contact"
+        verbose_name = 'Контакты пользователя'
+        verbose_name_plural = "Список контактов пользователя"
+
+    def __str__(self):
+        return f'{self.city} {self.street} {self.house}'
 
 class Shop(models.Model):
     name = models.CharField(max_length=50, verbose_name='Название')
@@ -168,6 +193,13 @@ class Order(models.Model):
         choices=status_choises,
         default='basket'
     )
+    contact = models.ForeignKey(
+        Contact,
+        verbose_name='Реквизиты доставки',
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE
+    )
 
     class Meta:
         db_table = "Order"
@@ -176,26 +208,26 @@ class Order(models.Model):
         ordering = ['-dt']
 
     def __str__(self):
-        return f"Order #{self.id}"
+        return f"Заказ №{self.id}"
 
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order,
         verbose_name='Заказ',
-        related_name='OrderItem',
+        related_name='ordered_items',
         on_delete=models.CASCADE
     )
     product = models.ForeignKey(Product,
         verbose_name="Товар",
-        related_name='OrderItem',
+        related_name='ordered_items',
         on_delete=models.CASCADE
     )
     shop = models.ForeignKey(Shop,
         verbose_name="Магазин",
-        related_name='OrderItem',
+        related_name='ordered_items',
         on_delete=models.CASCADE
     )
-    value = models.IntegerField(verbose_name='Значение')
+    value = models.IntegerField(verbose_name='Значение', validators=[MinValueValidator(1)])
 
     class Meta:
         db_table = "Order_item"

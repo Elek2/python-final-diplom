@@ -24,10 +24,11 @@ class CustomUserAdmin(UserAdmin):
         }),
     )
 
-    list_display = ('email', 'first_name', 'last_name', 'is_staff')
+    list_display = ('email', 'username', 'last_name', 'is_staff')
 
 
 admin.site.register(models.User, CustomUserAdmin)
+admin.site.register(models.Contact)
 admin.site.register(models.Shop)
 admin.site.register(models.Category)
 admin.site.register(models.Product)

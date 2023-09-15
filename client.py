@@ -42,43 +42,98 @@ def show_products(headers):
 
 def add_order_to_basket(headers, data):
     response = requests.post(
-        "http://127.0.0.1:8000/api/v1/add_basket/",
+        "http://127.0.0.1:8000/api/v1/basket/",
         headers=headers,
         json=data
     )
 
     pprint(response.json())
 
-if __name__ == "__main__":
 
-    headers_1 = {'Authorization': f'Token 6e13d1c37a264c22e35b4ba7c6b98d8c62057736'}
+def change_basket(headers, data):
+    response = requests.put(
+        "http://127.0.0.1:8000/api/v1/basket/",
+        headers=headers,
+        json=data
+    )
+    pprint(response.json())
+
+
+def delete_item_basket(headers, data):
+    response = requests.delete(
+        "http://127.0.0.1:8000/api/v1/basket/",
+        headers=headers,
+        json=data
+    )
+    pprint(response.json())
+
+
+def get_basket(headers):
+    response = requests.get(
+        "http://127.0.0.1:8000/api/v1/basket/",
+        headers=headers,
+    )
+    pprint(response.json())
+
+
+def confirm_order(headers, order_contact_data):
+    response = requests.post(
+        "http://127.0.0.1:8000/api/v1/order/",
+        headers=headers,
+        json=order_contact_data
+    )
+    pprint(response.json())
+
+
+if __name__ == "__main__":
+    headers_1 = {'Authorization': f'Token 6cd74c91e821ddad1638975d8508566ac1342286',
+                 }
     data_1 = {
         'url': 'https://raw.githubusercontent.com/Elek2/python-final-diplom/'
                'a00c9c36b4e9cb750bd6600af64187625f56ef50/data/shop1.yaml'}
 
-    headers_2 = {'Authorization': f'Token 6e13d1c37a264c22e35b4ba7c6b98d8c62057736'}
+    headers_2 = {'Authorization': f'Token 746d903d269759c59c064a5f51282e6f2fc06028'}
     data_2 = {
         'url': 'https://raw.githubusercontent.com/Elek2/python-final-diplom/'
                'a00c9c36b4e9cb750bd6600af64187625f56ef50/data/shop2.yaml'}
 
-    registration_data_1 = {'email': 'elekk9@yandex.ru', 'password': '1111'}
-    auth_data1 = {'email': 'elekk9@yandex.ru', 'password': '1111'}
-    auth_data2 = {'email': 'elek2@yandex.ru', 'password': 'nicaragua21'}
+    registration_data_1 = {'email': 'user_1@main.ru', 'password': '111'}
+    registration_data_2 = {'email': 'user_2@main.ru', 'password': '222'}
+    auth_data_1 = {'email': 'user_1@main.ru', 'password': '111'}
+    auth_data_2 = {'email': 'user_2@main.ru', 'password': '222'}
 
-    order_data = {'items':
-        {'product': '4216292', 'shop': '1', 'value': '3'}
-        # {'product': '4216313', 'shop': '1', 'value': '4'},
-        # {'product': '4216226', 'shop': '2', 'value': '5'},
-        # {'product': '4216292', 'shop': '2', 'value': '6'},
-        # {'product': '4216313', 'shop': '1', 'value': '7'},
-        , 'status': True}
+    order_data = {"items": [{"product": "4216292", "shop": "1", "value": "33"},
+                            {"product": "4216292", "shop": "1", "value": "8"},
+                            {"product": "4216313", "shop": "1", "value": "4"},
+                            {"product": "4216226", "shop": "2", "value": "5"},
+                            {"product": "4216292", "shop": "2", "value": "6"},
+                            {"product": "4216313", "shop": "1", "value": "7"}]}
 
-    # order_data = {'items': 'brbrb'}
-    # update(headers_2, data_1)
-    # update(headers_2, data_2)
+    order_change_data = {"items": {"product": "4216292", "shop": "1", "value": "28"}}
+    order_delete_data = {"items": [{"product": "4216292", "shop": "1"},
+                                   {"product": "4216313", "shop": "1"}]}
+
+    order_confirm_data_1 = {"contact": {"city": "Питер",
+                                        "street": "Невский пр.",
+                                        "house": "28",
+                                        "structure": "",
+                                        "apartment": "45",
+                                        "phone": "89112223344",
+                                        }}
+
+    order_confirm_data_2 = {"contact": {"id": "1"}}
 
     # registration(registration_data_1)
-    # auth(auth_data2)
+    # registration(registration_data_2)
+    # auth(auth_data_1)
+    # auth(auth_data_2)
+    # update(headers_1, data_1)
+    # update(headers_2, data_2)
     # show_products(headers_1)
-    add_order_to_basket(headers_1, order_data)
+    # add_order_to_basket(headers_1, order_data)
+    # change_basket(headers_1, order_change_data)
+    # delete_item_basket(headers_1, order_delete_data)
+    # get_basket(headers_1)
+    confirm_order(headers_1, order_confirm_data_2)
+    # confirm_order(headers_1, order_confirm_data_2)
 

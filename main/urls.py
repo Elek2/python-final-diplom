@@ -1,7 +1,7 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-from .views import Partner, Registration, CustomAuthToken, ProductInfoViewSet, ProductView, BasketView
+from .views import Partner, Registration, CustomAuthToken, ProductInfoViewSet, ProductView, BasketView, OrderView
 from rest_framework.authtoken import views
 
 r = DefaultRouter()  # Определяем роутер для CommentViewSet
@@ -11,7 +11,8 @@ urlpatterns = [
     path('update/', Partner.as_view(), name='api'),
     path('registration/', Registration.as_view(), name='reg'),
     path('api-token-auth/', CustomAuthToken.as_view()),
-    path('add_basket/', BasketView.as_view()),
+    path('basket/', BasketView.as_view()),\
+    path('order/', OrderView.as_view()),
     # path('product/', ProductView.as_view())
     # path('products/<slug:slug>/', ProductViewSet.as_view({'get': 'retrieve'})),
 ]
