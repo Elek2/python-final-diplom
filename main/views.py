@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from django.contrib.sites import requests
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.utils import IntegrityError
@@ -23,7 +25,7 @@ from rest_framework.viewsets import ModelViewSet
 from .models import User, Shop, Category, Product, ProductInfo, ProductParameter, Order, OrderItem, Contact
 from main.serializers import UserRegistrationSerializer, UserAuthTokenSerializer, ProductSerializer, \
     ProductInfoSerializer, BasketSerializer, ContactSerializer, \
-    BasketListSerializer, OrderCompleteSerializer
+    BasketListSerializer, OrderSerializer
 from rest_framework.authtoken.models import Token
 
 
@@ -121,7 +123,6 @@ class BasketView(APIView):
     Класс для работы с корзиной пользователя
     """
 
-    #
     def get(self, request, *args, **kwargs):
 
         basket = Order.objects.filter(
@@ -141,6 +142,7 @@ class BasketView(APIView):
             for item in items_data:
                 item.update({'order': basket.id})
                 serializer = BasketSerializer(data=item)
+
                 if serializer.is_valid():
                     try:
                         serializer.save()
@@ -190,8 +192,10 @@ class OrderView(APIView):
     Класс для работы с корзиной пользователя
     """
 
-    # def get(self, request, *args, **kwargs):
-    #
+    def get_price(self, item):
+        product_info = ProductInfo.objects.get(product=item.product, shop=item.shop)
+        return product_info.price
+
     def post(self, request, *args, **kwargs):
         try:
             new_order = Order.objects.get(user_id=request.user.id, status='basket')
@@ -217,19 +221,32 @@ class OrderView(APIView):
             new_order.contact = contact
             new_order.save()
 
-            order = Order.objects.filter(
-                id=new_order.id).annotate()
+            serializer = OrderSerializer(new_order)
+            return Response(serializer.data)
+            # ordered_items = OrderItem.objects.filter(order=new_order)
+            #
+            # response_data = {
+            #     'Список товаров': [
+            #         {
+            #             'Наименование товара': item.product.name,
+            #             'Магазин': item.shop.name,
+            #             'Цена': self.get_price(item),
+            #             'Количество': item.value,
+            #             'Сумма': item.value * self.get_price(item)
+            #         }
+            #         for item in ordered_items
+            #     ],
+            #     'Данные получателя': {
+            #         'ФИО': ' '.join([
+            #             new_order.contact.user.last_name,
+            #             new_order.contact.user.username,
+            #             new_order.contact.user.second_name]),
+            #         'Email': new_order.contact.user.email,
+            #         'Телефон': new_order.contact.phone
+            #     }
+            # }
 
-            basket = Order.objects.filter(
-                user_id=request.user.id, status='basket').prefetch_related(
-                'ordered_items__product__product_info',
-            ).annotate(
-                total_sum=Sum(F('ordered_items__value') * F('ordered_items__product__product_info__price'))).distinct()
-
-            # new_order.annotate(
-            #     sum=Sum(F('ordered_items__value') * F('ordered_items__product__product_info__price')))
-            serializer = OrderCompleteSerializer(order, many=True)
-            return JsonResponse(serializer.data, safe=False)
+            # return JsonResponse(response_data, safe=False)
 
         return JsonResponse({'Status': False, 'Errors': 'Данные не получены'})
 

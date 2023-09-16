@@ -41,12 +41,39 @@ class UserAuthTokenSerializer(serializers.Serializer):
             raise serializers.ValidationError("Заполните поля email и password")
         return attrs
 
+    def update(self, instance, validated_data):
+        pass
+
+    def create(self, validated_data):
+        pass
+
 
 class ContactSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+
     class Meta:
         model = Contact
-        fields = ('id', 'city', 'street', 'house', 'structure', 'apartment', 'user', 'phone')
+        fields = ('id', 'city', 'street', 'house', 'structure', 'apartment', 'user', 'phone', 'name')
         read_only_fields = ('id',)
+
+    def get_name(self, obj):
+        user = obj.user
+        full_name = ' '.join([user.last_name, user.username, user.second_name])
+        return full_name
+
+
+class ContactPartialSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    email = serializers.EmailField(source='user.email')
+
+    class Meta:
+        model = Contact
+        fields = ('name', 'email', 'phone')
+
+    def get_name(self, obj):
+        user = obj.user
+        full_name = ' '.join([user.last_name, user.username, user.second_name])
+        return full_name
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -83,8 +110,8 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class BasketSerializer(serializers.ModelSerializer):
-    product = serializers.StringRelatedField()
-    shop = serializers.StringRelatedField()
+    # product = serializers.StringRelatedField()
+    # shop = serializers.StringRelatedField()
 
     class Meta:
         model = OrderItem
@@ -108,28 +135,44 @@ class BasketSerializer(serializers.ModelSerializer):
 class BasketListSerializer(serializers.ModelSerializer):
     total_sum = serializers.IntegerField()
     ordered_items = BasketSerializer(many=True)
+
     class Meta:
         model = Order
         fields = ('user', 'status', 'total_sum', 'ordered_items')
         read_only_fields = ('id', 'dt')
 
 
+class ProductInfoSerializer1(serializers.ModelSerializer):
+    sum = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ProductInfo
+        fields = ('product', 'shop', 'price', 'sum')
+
+    def get_sum(self, obj):
+        return obj.price * self.context['order_item'].value
+
+
 class OrderItemSerializer(serializers.ModelSerializer):
-    product = serializers.StringRelatedField()
-    shop = serializers.StringRelatedField()
-    # price = serializers.IntegerField()
-    # sum = serializers.IntegerField()
+    price = serializers.SerializerMethodField()
+    sum = serializers.SerializerMethodField()
 
     class Meta:
         model = OrderItem
-        fields = ('id', 'product', 'shop', 'value')
-        # extra_fields = ('price',)
+        fields = ('price', 'shop', 'value', 'product', 'sum')
+
+    def get_price(self, obj):
+        product_info = ProductInfo.objects.get(product=obj.product, shop=obj.shop)
+        return product_info.price
+
+    def get_sum(self, obj):
+        return self.get_price(obj) * obj.value
 
 
-class OrderCompleteSerializer(serializers.ModelSerializer):
+class OrderSerializer(serializers.ModelSerializer):
     ordered_items = OrderItemSerializer(many=True)
-    contact = ContactSerializer()
+    contact = ContactPartialSerializer()
 
     class Meta:
         model = Order
-        fields = ('id', 'status', 'ordered_items', 'contact')
+        fields = ('ordered_items', 'contact')

@@ -46,7 +46,6 @@ def add_order_to_basket(headers, data):
         headers=headers,
         json=data
     )
-
     pprint(response.json())
 
 
@@ -86,13 +85,13 @@ def confirm_order(headers, order_contact_data):
 
 
 if __name__ == "__main__":
-    headers_1 = {'Authorization': f'Token 6cd74c91e821ddad1638975d8508566ac1342286',
+    headers_1 = {'Authorization': f'Token 92d418eccb78065f86478e58b26f7da548223562',
                  }
     data_1 = {
         'url': 'https://raw.githubusercontent.com/Elek2/python-final-diplom/'
                'a00c9c36b4e9cb750bd6600af64187625f56ef50/data/shop1.yaml'}
 
-    headers_2 = {'Authorization': f'Token 746d903d269759c59c064a5f51282e6f2fc06028'}
+    headers_2 = {'Authorization': f'Token 44861828b8c1e472b1cfb1d9643a2f4e6658e1fd'}
     data_2 = {
         'url': 'https://raw.githubusercontent.com/Elek2/python-final-diplom/'
                'a00c9c36b4e9cb750bd6600af64187625f56ef50/data/shop2.yaml'}
@@ -134,6 +133,6 @@ if __name__ == "__main__":
     # change_basket(headers_1, order_change_data)
     # delete_item_basket(headers_1, order_delete_data)
     # get_basket(headers_1)
-    confirm_order(headers_1, order_confirm_data_2)
+    confirm_order(headers_1, order_confirm_data_1)
     # confirm_order(headers_1, order_confirm_data_2)
 

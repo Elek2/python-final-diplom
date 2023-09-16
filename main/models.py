@@ -130,7 +130,7 @@ class ProductInfo(models.Model):
     )
     shop = models.ForeignKey(Shop,
         verbose_name='Магазин',
-        related_name='product_info',
+        related_name='product_inf',
         on_delete=models.CASCADE
     )
     model = models.CharField(
