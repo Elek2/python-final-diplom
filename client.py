@@ -1,6 +1,7 @@
-from pprint import pprint
-import requests
 import json
+from pprint import pprint
+
+import requests
 
 
 def update(headers, data):
@@ -84,6 +85,20 @@ def confirm_order(headers, order_contact_data):
     pprint(response.json())
 
 
+def get_orders(headers):
+    response = requests.get(
+        "http://127.0.0.1:8000/api/v1/order/",
+        headers=headers,
+    )
+    pprint(response.json())
+
+def get_order(headers):
+    response = requests.get(
+        "http://127.0.0.1:8000/api/v1/order/1/",
+        headers=headers,
+    )
+    pprint(response.json())
+
 if __name__ == "__main__":
     headers_1 = {'Authorization': f'Token 92d418eccb78065f86478e58b26f7da548223562',
                  }
@@ -133,6 +148,8 @@ if __name__ == "__main__":
     # change_basket(headers_1, order_change_data)
     # delete_item_basket(headers_1, order_delete_data)
     # get_basket(headers_1)
-    confirm_order(headers_1, order_confirm_data_1)
+    # confirm_order(headers_1, order_confirm_data_1)
+    get_order(headers_1)
+    # get_orders(headers_1)
     # confirm_order(headers_1, order_confirm_data_2)
 

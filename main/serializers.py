@@ -1,11 +1,8 @@
-from abc import ABC
-
-from django.contrib.auth.hashers import make_password
-from django.utils.text import slugify
+from django.utils import dateformat
 from rest_framework import serializers
-from rest_framework.authtoken.serializers import AuthTokenSerializer
 
-from main.models import User, Category, Shop, ProductInfo, Product, ProductParameter, OrderItem, Order, Contact
+from main.models import (Category, Contact, Order, OrderItem, Product,
+                         ProductInfo, ProductParameter, Shop, User)
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -49,31 +46,11 @@ class UserAuthTokenSerializer(serializers.Serializer):
 
 
 class ContactSerializer(serializers.ModelSerializer):
-    name = serializers.SerializerMethodField()
 
     class Meta:
         model = Contact
-        fields = ('id', 'city', 'street', 'house', 'structure', 'apartment', 'user', 'phone', 'name')
+        fields = ('id', 'city', 'street', 'house', 'structure', 'apartment', 'user', 'phone', )
         read_only_fields = ('id',)
-
-    def get_name(self, obj):
-        user = obj.user
-        full_name = ' '.join([user.last_name, user.username, user.second_name])
-        return full_name
-
-
-class ContactPartialSerializer(serializers.ModelSerializer):
-    name = serializers.SerializerMethodField()
-    email = serializers.EmailField(source='user.email')
-
-    class Meta:
-        model = Contact
-        fields = ('name', 'email', 'phone')
-
-    def get_name(self, obj):
-        user = obj.user
-        full_name = ' '.join([user.last_name, user.username, user.second_name])
-        return full_name
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -104,20 +81,16 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        # fields = ('__all__')
         fields = ['name', 'category', 'product_info']
         read_only_fields = ('id',)
 
 
 class BasketSerializer(serializers.ModelSerializer):
-    # product = serializers.StringRelatedField()
-    # shop = serializers.StringRelatedField()
 
     class Meta:
         model = OrderItem
         fields = ('order', 'product', 'shop', 'value')
         read_only_fields = ('id',)
-        extra_fields = ('product_info',)
 
     def create(self, validated_data):
         basket_item, item_created = OrderItem.objects.get_or_create(
@@ -140,6 +113,63 @@ class BasketListSerializer(serializers.ModelSerializer):
         model = Order
         fields = ('user', 'status', 'total_sum', 'ordered_items')
         read_only_fields = ('id', 'dt')
+
+
+# class OrderItemSerializer(serializers.ModelSerializer):
+#     product = serializers.StringRelatedField()
+#     shop = serializers.StringRelatedField()
+#
+#     class Meta:
+#         model = OrderItem
+#         fields = ('id', 'product', 'shop', 'value')
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    Статус = serializers.CharField(source='get_status_display')
+    Сумма = serializers.SerializerMethodField()
+    # dt = serializers.DateTimeField(format="%d %B %Y")  # время без локализации (15 September 2023)
+    Время_заказа = serializers.SerializerMethodField()  # время с локализацией (чз ф-ию get_dt (15 Сентября 2023))
+    Номер_заказа = serializers.IntegerField(source='id')
+
+    class Meta:
+        model = Order
+        fields = ('Номер_заказа', 'Время_заказа', 'Статус', 'Сумма')
+
+    def get_Время_заказа(self, obj):
+        return dateformat.format(obj.dt, "d E Y")
+
+    def get_Сумма(self, obj):
+        # Форматируем сумму с разделителями тысяч
+        return '{:,}'.format(obj.total_sum).replace(',', ' ')
+
+
+# class OrderRetrieveSerializer(serializers.ModelSerializer):
+#     status = serializers.CharField(source='get_status_display')
+#     dt = serializers.SerializerMethodField()
+#
+#     class Meta:
+#         model = Order
+#         fields = ('id', 'dt', 'status', )
+#
+#     def get_dt(self, obj):
+#         return dateformat.format(obj.dt, "d E Y")
+
+
+'''
+вариант сериализаторов для вывода информации о заказе OrderView (post)
+
+class ContactPartialSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
+    email = serializers.EmailField(source='user.email')
+
+    class Meta:
+        model = Contact
+        fields = ('name', 'email', 'phone')
+
+    def get_name(self, obj):
+        user = obj.user
+        full_name = ' '.join([user.last_name, user.username, user.second_name])
+        return full_name
 
 
 class ProductInfoSerializer1(serializers.ModelSerializer):
@@ -176,3 +206,4 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = ('ordered_items', 'contact')
+'''

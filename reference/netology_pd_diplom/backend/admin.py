@@ -1,8 +1,8 @@
+from backend.models import (Category, ConfirmEmailToken, Contact, Order,
+                            OrderItem, Parameter, Product, ProductInfo,
+                            ProductParameter, Shop, User)
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-
-from backend.models import User, Shop, Category, Product, ProductInfo, Parameter, ProductParameter, Order, OrderItem, \
-    Contact, ConfirmEmailToken
 
 
 @admin.register(User)

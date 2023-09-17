@@ -1,14 +1,19 @@
+import json
 from collections import OrderedDict
 
+import django.db.utils as e
+import requests
+import yaml
 from django.contrib.sites import requests
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import F, Q, Sum
 from django.db.utils import IntegrityError
-import django.db.utils as e
 from django.http import JsonResponse
-from django.db.models import Q, Sum, F
 from django.shortcuts import render
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
+from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import CreateAPIView, ListAPIView
@@ -16,17 +21,16 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
 from rest_framework.views import APIView
-import requests
-import yaml
-import json
-from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.viewsets import ModelViewSet
 
-from .models import User, Shop, Category, Product, ProductInfo, ProductParameter, Order, OrderItem, Contact
-from main.serializers import UserRegistrationSerializer, UserAuthTokenSerializer, ProductSerializer, \
-    ProductInfoSerializer, BasketSerializer, ContactSerializer, \
-    BasketListSerializer, OrderSerializer
-from rest_framework.authtoken.models import Token
+from main.serializers import (BasketListSerializer, BasketSerializer,
+                              ContactSerializer, OrderSerializer,
+                              ProductInfoSerializer, ProductSerializer,
+                              UserAuthTokenSerializer,
+                              UserRegistrationSerializer)
+
+from .models import (Category, Contact, Order, OrderItem, Product, ProductInfo,
+                     ProductParameter, Shop, User)
 
 
 class Registration(CreateAPIView):
@@ -187,14 +191,65 @@ class BasketView(APIView):
         return JsonResponse({'Status': False, 'Errors': 'Данные не получены'})
 
 
+
+
 class OrderView(APIView):
     """
-    Класс для работы с корзиной пользователя
+    Класс для работы с заказами пользователя
     """
 
-    def get_price(self, item):
-        product_info = ProductInfo.objects.get(product=item.product, shop=item.shop)
-        return product_info.price
+    def format_price(self, price):
+        return '{:,}'.format(price).replace(',', ' ')
+
+    def show_result(self, order: Order) -> OrderedDict:
+        ordered_items = OrderItem.objects.filter(order=order)
+
+        response_data = OrderedDict()
+        response_data['Данные заказа'] = {
+                    'Номер заказа': order.id,
+                    'Дата создания': order.dt.strftime("%d.%m.%Y"),
+                    'Статус': order.get_status_display(),
+                }
+
+        response_data['Список товаров'] = []
+        for item in ordered_items:
+            price = ProductInfo.objects.get(product=item.product, shop=item.shop).price
+
+            response_data['Список товаров'].append({
+                'Наименование товара': item.product.name,
+                'Магазин': item.shop.name,
+                'Цена': self.format_price(price),
+                'Количество': item.value,
+                'Сумма': self.format_price(item.value * price)
+            })
+
+        response_data['Данные получателя'] = {
+            'ФИО': ' '.join([
+                order.contact.user.last_name,
+                order.contact.user.username,
+                order.contact.user.second_name]),
+            'Email': order.contact.user.email,
+            'Телефон': order.contact.phone
+        }
+        return response_data
+
+    def get(self, request, order_id=None):
+        if order_id is not None:
+            # Если передан Id, получаем конкретный заказ
+            try:
+                order = Order.objects.get(id=order_id, user=request.user.id)
+                return JsonResponse({'Status': True, 'Заказ': self.show_result(order)})
+            except Order.DoesNotExist:
+                return JsonResponse({'Status': False, 'Errors': 'Такого заказа не существует'})
+        else:
+            # Если Id не передан, получаем список всех заказов
+            orders = Order.objects.\
+                filter(user_id=request.user.id).\
+                exclude(status='basket').\
+                prefetch_related('ordered_items__product__product_info').\
+                annotate(total_sum=Sum(F('ordered_items__value') * F('ordered_items__product__product_info__price')))
+            serializer = OrderSerializer(orders, many=True)
+            return JsonResponse({'Status': True, 'Заказы': serializer.data})
 
     def post(self, request, *args, **kwargs):
         try:
@@ -221,33 +276,11 @@ class OrderView(APIView):
             new_order.contact = contact
             new_order.save()
 
-            serializer = OrderSerializer(new_order)
-            return Response(serializer.data)
-            # ordered_items = OrderItem.objects.filter(order=new_order)
-            #
-            # response_data = {
-            #     'Список товаров': [
-            #         {
-            #             'Наименование товара': item.product.name,
-            #             'Магазин': item.shop.name,
-            #             'Цена': self.get_price(item),
-            #             'Количество': item.value,
-            #             'Сумма': item.value * self.get_price(item)
-            #         }
-            #         for item in ordered_items
-            #     ],
-            #     'Данные получателя': {
-            #         'ФИО': ' '.join([
-            #             new_order.contact.user.last_name,
-            #             new_order.contact.user.username,
-            #             new_order.contact.user.second_name]),
-            #         'Email': new_order.contact.user.email,
-            #         'Телефон': new_order.contact.phone
-            #     }
-            # }
+            # вариант через сериализаторы (закомментирован)
+            # serializer = OrderSerializer(new_order)
+            # return Response(serializer.data)
 
-            # return JsonResponse(response_data, safe=False)
-
+            return JsonResponse({'Status': True, 'Order': self.show_result(new_order)})
         return JsonResponse({'Status': False, 'Errors': 'Данные не получены'})
 
 # class ProductCompareView(ListAPIView):

@@ -1,25 +1,29 @@
 from distutils.util import strtobool
 
+from backend.models import (Category, ConfirmEmailToken, Contact, Order,
+                            OrderItem, Parameter, Product, ProductInfo,
+                            ProductParameter, Shop)
+from backend.serializers import (CategorySerializer, ContactSerializer,
+                                 OrderItemSerializer, OrderSerializer,
+                                 ProductInfoSerializer, ShopSerializer,
+                                 UserSerializer)
+from backend.signals import new_order, new_user_registered
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from django.db import IntegrityError
-from django.db.models import Q, Sum, F
+from django.db.models import F, Q, Sum
 from django.http import JsonResponse
-from client import get
 from rest_framework.authtoken.models import Token
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from ujson import loads as load_json
-from yaml import load as load_yaml, Loader
+from yaml import Loader
+from yaml import load as load_yaml
 
-from backend.models import Shop, Category, Product, ProductInfo, Parameter, ProductParameter, Order, OrderItem, \
-    Contact, ConfirmEmailToken
-from backend.serializers import UserSerializer, CategorySerializer, ShopSerializer, ProductInfoSerializer, \
-    OrderItemSerializer, OrderSerializer, ContactSerializer
-from backend.signals import new_user_registered, new_order
+from client import get
 
 
 class RegisterAccount(APIView):

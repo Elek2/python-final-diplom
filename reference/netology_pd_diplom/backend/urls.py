@@ -1,9 +1,10 @@
+from backend.views import (AccountDetails, BasketView, CategoryView,
+                           ConfirmAccount, ContactView, LoginAccount, OrderView,
+                           PartnerOrders, PartnerState, PartnerUpdate,
+                           ProductInfoView, RegisterAccount, ShopView)
 from django.urls import path
-from django_rest_passwordreset.views import reset_password_request_token, reset_password_confirm
-
-from backend.views import PartnerUpdate, RegisterAccount, LoginAccount, CategoryView, ShopView, ProductInfoView, \
-    BasketView, \
-    AccountDetails, ContactView, OrderView, PartnerState, PartnerOrders, ConfirmAccount
+from django_rest_passwordreset.views import (reset_password_confirm,
+                                             reset_password_request_token)
 
 app_name = 'backend'
 urlpatterns = [

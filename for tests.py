@@ -1,17 +1,11 @@
+from slugify import slugify as pyslug
+from django.utils.text import slugify as djangoslug
 
-class Br:
-    def __int__(self):
-        pass
 
-    def newfunc(self):
-        a=3
-        b=4
-        return {"a":3, "b":4}
+text = "мама Мыла раму. mom Clean,,?? windo"
 
-    @property
-    def save(self):
-        return self.newfunc()['b']
+python_slug = pyslug(text)
+django_slug = djangoslug(text)
 
-aaa = Br()
-
-print(aaa.save)
+print(f"python_slug = {python_slug}")
+print(f"django_slug = {django_slug}")

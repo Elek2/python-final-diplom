@@ -1,20 +1,19 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
-from .views import Partner, Registration, CustomAuthToken, ProductInfoViewSet, ProductView, BasketView, OrderView
-from rest_framework.authtoken import views
+from .views import (BasketView, CustomAuthToken, OrderView, Partner,
+                    ProductInfoViewSet, Registration)
 
-r = DefaultRouter()  # Определяем роутер для CommentViewSet
-r.register('products', ProductInfoViewSet)  # Автоматически создается маршрут comments, comments/<pk>
+# Если определяем class ModelViewSet, определяем router, регистрируем наш класс
+router = DefaultRouter()
+router.register('products', ProductInfoViewSet)  # Автоматически создается маршрут products, products/<pk>
 
 urlpatterns = [
     path('update/', Partner.as_view(), name='api'),
     path('registration/', Registration.as_view(), name='reg'),
     path('api-token-auth/', CustomAuthToken.as_view()),
-    path('basket/', BasketView.as_view()),\
+    path('basket/', BasketView.as_view()),
     path('order/', OrderView.as_view()),
-    # path('product/', ProductView.as_view())
-    # path('products/<slug:slug>/', ProductViewSet.as_view({'get': 'retrieve'})),
+    path('order/<int:order_id>/', OrderView.as_view()),
+    router.urls
 ]
-
-urlpatterns += r.urls
