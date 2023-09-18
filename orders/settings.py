@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/2.2/ref/settings/
 
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -20,12 +24,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'rbs%#26gpjc4kb89hr5&(8f6(sp#%41&k%3x*)qm42ttk@i7k1'
+SECRET_KEY = os.getenv('ENV_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('ENV_DEBUG')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('ENV_ALLOWED_HOSTS').split(',')
 
 
 # Application definition
@@ -78,12 +82,12 @@ WSGI_APPLICATION = 'orders.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'orders_diplom_DB',
-        'USER': 'postgres',
-        'PASSWORD': 'nicaragua21',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'ENGINE': os.getenv('ENV_DB_ENGINE'),
+        'NAME': os.getenv('ENV_DB_NAME'),
+        'USER': os.getenv('ENV_DB_USER'),
+        'PASSWORD': os.getenv('ENV_DB_PASSWORD'),
+        'HOST': os.getenv('ENV_DB_HOST'),
+        'PORT': os.getenv('ENV_DB_PORT'),
     }
 }
 
@@ -106,15 +110,15 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTH_USER_MODEL = 'main.User'
+AUTH_USER_MODEL = 'main.User'  # указываем Django использовать нашу модель User вместо стандартной
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
     ],
-    # 'DEFAULT_PERMISSION_CLASSES': (
-    #     'rest_framework.permissions.IsAuthenticated'
-    # ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated'
+    ],
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.UserRateThrottle',  # Проверка запросов в минуту от зарегистрированного пользователя
         'rest_framework.throttling.AnonRateThrottle',  # Проверка запросов в минуту от анонимного пользователя
@@ -125,6 +129,16 @@ REST_FRAMEWORK = {
     },
 
 }
+
+# Определяем способ отправки электронной почты
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # для отправки писем в консоль (для тестов)
+
+# Определяем на какой адрес будут отправляться сообщения
+EMAIL_HOST_USER = 'example@example.com'
+
+# Определяем c какого адреса будут отправляться сообщения
+DEFAULT_FROM_EMAIL = 'noreply@example.com'
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/

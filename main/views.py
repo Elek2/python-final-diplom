@@ -1,25 +1,19 @@
-import json
 from collections import OrderedDict
 
-import django.db.utils as e
 import requests
 import yaml
 from django.contrib.sites import requests
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import F, Q, Sum
+from django.core.mail import send_mail
+from django.db.models import F, Sum
 from django.db.utils import IntegrityError
 from django.http import JsonResponse
-from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
-from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework.generics import CreateAPIView, ListAPIView
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
@@ -28,6 +22,7 @@ from main.serializers import (BasketListSerializer, BasketSerializer,
                               ProductInfoSerializer, ProductSerializer,
                               UserAuthTokenSerializer,
                               UserRegistrationSerializer)
+from django.conf import settings
 
 from .models import (Category, Contact, Order, OrderItem, Product, ProductInfo,
                      ProductParameter, Shop, User)
@@ -36,6 +31,27 @@ from .models import (Category, Contact, Order, OrderItem, Product, ProductInfo,
 class Registration(CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserRegistrationSerializer
+    permission_classes = []
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        # Отправка сообщения об успешной регистрации на email пользователя
+        subject = 'Регистрация успешно завершена'
+        message = f'Поздравляем, вы успешно зарегистрировались.' \
+                  f'\nНовый пользователь: {user.email},' \
+                  f'\nПароль: {request.data["password"]} '
+        from_email = settings.DEFAULT_FROM_EMAIL
+        recipient_list = [user.email]
+        send_mail(subject, message, from_email, recipient_list)
+
+        response_data = {
+            'message': 'Регистрация успешно завершена.',
+            'email': user.email,
+        }
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
 
 class CustomAuthToken(ObtainAuthToken):
@@ -91,13 +107,13 @@ class Partner(APIView):
                 price_rrc=product['price_rrc'],
                 quantity=product['quantity'],
                 shop=shop,
-                product=new_product  # попробовать просто new_product
+                product=new_product
             )
             for param_name, param_value in product['parameters'].items():
                 new_product_params = ProductParameter.objects.create(
                     name=param_name,
                     value=param_value,
-                    product_info=new_product_info  # попробовать просто new_product_info
+                    product_info=new_product_info
                 )
 
         return JsonResponse({'Status': True})
@@ -272,7 +288,7 @@ class OrderView(APIView):
                 else:
                     return JsonResponse({'Status': False, 'Errors': 'Неверный формат запроса'})
 
-            # new_order.status = 'processed'
+            new_order.status = 'processed'
             new_order.contact = contact
             new_order.save()
 
@@ -283,40 +299,3 @@ class OrderView(APIView):
             return JsonResponse({'Status': True, 'Order': self.show_result(new_order)})
         return JsonResponse({'Status': False, 'Errors': 'Данные не получены'})
 
-# class ProductCompareView(ListAPIView):
-#     """
-#     Класс для сравнения цен товаров
-#     """
-#     serializer_class = ProductCompareSerializer
-#
-#     def get_queryset(self):
-#
-#         queryset = ProductInfo.objects.filter(product__slug=name)
-#         return queryset
-#
-#
-# class ProductInfoView(APIView):
-#     """
-#     Класс для просмотра карточки товаров
-#     """
-#
-#     def get(self, request, *args, **kwargs):
-#
-#         name = Product.objects.get('name')
-#         product = ProductInfo.objects.filter(product__slug=name)
-#
-#
-#         name = self.request.data.get('name')
-#         queryset = ProductInfo.objects.filter(product__slug=name)
-#         return queryset
-
-
-# class ProductInfoView(ModelViewSet):
-#     queryset = Product.objects.all()
-#     serializer_class = ProductSerializer
-#     filter_backends = [DjangoFilterBackend,OrderingFilter]
-#     filterset_fields = ['user', ]
-#     ordering_fields = ['id', 'user', 'text', 'created_at']
-#     permission_classes = [
-#         IsAuthenticated,  # встоенный метод, запрещающий любые действия без авторизации
-#         ]

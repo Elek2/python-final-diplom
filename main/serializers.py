@@ -115,15 +115,6 @@ class BasketListSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'dt')
 
 
-# class OrderItemSerializer(serializers.ModelSerializer):
-#     product = serializers.StringRelatedField()
-#     shop = serializers.StringRelatedField()
-#
-#     class Meta:
-#         model = OrderItem
-#         fields = ('id', 'product', 'shop', 'value')
-
-
 class OrderSerializer(serializers.ModelSerializer):
     Статус = serializers.CharField(source='get_status_display')
     Сумма = serializers.SerializerMethodField()
@@ -143,16 +134,6 @@ class OrderSerializer(serializers.ModelSerializer):
         return '{:,}'.format(obj.total_sum).replace(',', ' ')
 
 
-# class OrderRetrieveSerializer(serializers.ModelSerializer):
-#     status = serializers.CharField(source='get_status_display')
-#     dt = serializers.SerializerMethodField()
-#
-#     class Meta:
-#         model = Order
-#         fields = ('id', 'dt', 'status', )
-#
-#     def get_dt(self, obj):
-#         return dateformat.format(obj.dt, "d E Y")
 
 
 '''

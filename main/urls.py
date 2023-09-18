@@ -15,5 +15,5 @@ urlpatterns = [
     path('basket/', BasketView.as_view()),
     path('order/', OrderView.as_view()),
     path('order/<int:order_id>/', OrderView.as_view()),
-    router.urls
 ]
+urlpatterns += router.urls

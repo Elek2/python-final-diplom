@@ -111,7 +111,7 @@ if __name__ == "__main__":
         'url': 'https://raw.githubusercontent.com/Elek2/python-final-diplom/'
                'a00c9c36b4e9cb750bd6600af64187625f56ef50/data/shop2.yaml'}
 
-    registration_data_1 = {'email': 'user_1@main.ru', 'password': '111'}
+    registration_data_1 = {'email': 'user_17@main.ru', 'password': '666'}
     registration_data_2 = {'email': 'user_2@main.ru', 'password': '222'}
     auth_data_1 = {'email': 'user_1@main.ru', 'password': '111'}
     auth_data_2 = {'email': 'user_2@main.ru', 'password': '222'}
@@ -137,7 +137,7 @@ if __name__ == "__main__":
 
     order_confirm_data_2 = {"contact": {"id": "1"}}
 
-    # registration(registration_data_1)
+    registration(registration_data_1)
     # registration(registration_data_2)
     # auth(auth_data_1)
     # auth(auth_data_2)
@@ -149,7 +149,7 @@ if __name__ == "__main__":
     # delete_item_basket(headers_1, order_delete_data)
     # get_basket(headers_1)
     # confirm_order(headers_1, order_confirm_data_1)
-    get_order(headers_1)
+    # get_order(headers_1)
     # get_orders(headers_1)
     # confirm_order(headers_1, order_confirm_data_2)
 
