@@ -1,3 +1,12 @@
+## Описание
+* Написаны основные эндпоинты для страниц сервиса (описаны ниже)
+* БД использовалась postgres. Все пароли через .env. Пример .env-example
+* Отправка email в консоль (настройка в settings.py)
+* Регистрация пользователя по email без username
+* yaml файл получаем по url, но добавлены для тестов 2 строчки 77,78 во view.py
+для получения по файлам
+
+
 ## API Endpoints для основных страниц сервиса:
 1) Вход (аутентификация)  
 *POST*  
@@ -52,8 +61,8 @@ https://raw.githubusercontent.com/Elek2/python-final-diplom/a00c9c36b4e9cb750bd6
 `{"product": "4216292", "shop": "1", "quantity": "3"},`  
 `{"product": "4216292", "shop": "2", "quantity": "8"},`  
 `]}`  
-`Respose: {'Status': True, 'Massage': 'Товары успешно удалены'}`
-8) Просмотр корзины 
+`Respose: {'Status': True, 'Message': 'Товары успешно удалены'}`
+9) Просмотр корзины 
 *GET*  
 `URL: /api/v1/products/basket/`  
 `headers = {'Authorization': 'Token <your_token>'}`  
@@ -61,18 +70,44 @@ https://raw.githubusercontent.com/Elek2/python-final-diplom/a00c9c36b4e9cb750bd6
 `'status': 'basket',`  
 `'total_sum': ,`  
 `'user': }]`  
-8) Подтверждение заказа и указание контактной информации  
+10) Подтверждение заказа и указание контактной информации  
 *POST*  
 `URL: /api/v1/products/order/`  
 `headers = {'Authorization': 'Token <your_token>'}`  
-`{"contact": {'city':, 'street':, 'house':, 'structure':, 'apartment':, 'phone':,}}`  
-`Respose: {'Status': True, 'Massage': 'Товары успешно добавлены в корзину'}`
-9) Просмотр заказов  
-`URL: /api/v1/api-token-auth/`   
-`data = {'email': '<your_email>', 'password': '<your_password>'}`  
-`Respose: `
-10) Просмотр заказа  
-`URL: /api/v1/api-token-auth/`   
-`data = {'email': '<your_email>', 'password': '<your_password>'}`  
-`Respose: `
+`data = {"contact": {'city':, 'street':, 'house':, 'structure':, 'apartment':, 'phone':,}}`  
+`Respose: {`  
+`'Status': True,`  
+`'Order': {'Данные заказа': {'Дата создания': '',
+                             'Номер заказа': ,
+                             'Статус': 'В работе'},
+           'Данные получателя': {'Email': '',
+                                 'Телефон': '',
+                                 'ФИО': '  '},
+           'Список товаров': []}}`
+11) Просмотр заказов  
+*GET*  
+`URL: /api/v1/order/`  
+`Respose: {`  
+`{'Status': True,`  
+`'Заказы': [{'Время_заказа': '',
+            'Номер_заказа': ,
+            'Статус': '',
+            'Сумма': ''},
+           {'Время_заказа': '',
+            'Номер_заказа': ,
+            'Статус': '',
+            'Сумма': ''}]}`
+12) Просмотр заказа  
+*GET*  
+`URL: /api/v1/order/<pk>`  
+`headers = {'Authorization': 'Token <your_token>'}`  
+`Respose: {`  
+`'Status': True,`  
+`'Order': {'Данные заказа': {'Дата создания': '',
+                             'Номер заказа': ,
+                             'Статус': 'В работе'},
+           'Данные получателя': {'Email': '',
+                                 'Телефон': '',
+                                 'ФИО': '  '},
+           'Список товаров': []}}`
 

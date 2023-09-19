@@ -100,28 +100,30 @@ def get_order(headers):
     pprint(response.json())
 
 if __name__ == "__main__":
-    headers_1 = {'Authorization': f'Token 73a29146cda134164b17d084e2ed759d4e798817',
+    headers_1 = {'Authorization': f'Token 70dd7067b4adb548552f3a7978f7b7fa9ad5b044',
                  }
     data_1 = {
         'url': 'https://raw.githubusercontent.com/Elek2/python-final-diplom/'
                'a00c9c36b4e9cb750bd6600af64187625f56ef50/data/shop1.yaml'}
+    data_3 = {'file': 'data/shop1.yaml'}
 
-    headers_2 = {'Authorization': f'Token 401e6beb3d1237c11c88fd18483fbaa34c8234ad'}
+    headers_2 = {'Authorization': f'Token d04b3c75c07f0ab48083b5179c0204c02ca7edf5'}
     data_2 = {
         'url': 'https://raw.githubusercontent.com/Elek2/python-final-diplom/'
                'a00c9c36b4e9cb750bd6600af64187625f56ef50/data/shop2.yaml'}
+    data_4 = {'file': 'data/shop2.yaml'}
 
     registration_data_1 = {'email': 'user_8@main.ru', 'password': '111'}
     registration_data_2 = {'email': 'user_3@main.ru', 'password': '222'}
-    auth_data_1 = {'email': 'user_1@main.ru', 'password': '111'}
+    auth_data_1 = {'email': 'user_8@main.ru', 'password': '111'}
     auth_data_2 = {'email': 'user_3@main.ru', 'password': '222'}
 
     order_data = {"items": [{"product": "4216292", "shop": "1", "quantity": "3"},
                             {"product": "4216292", "shop": "1", "quantity": "8"},
                             {"product": "4216313", "shop": "1", "quantity": "4"},
-                            {"product": "4216226", "shop": "2", "quantity": "5"},
-                            {"product": "4216292", "shop": "2", "quantity": "6"},
-                            {"product": "4216313", "shop": "1", "quantity": "7"}]}
+                            {"product": "4216226", "shop": "5", "quantity": "5"},
+                            {"product": "4216292", "shop": "5", "quantity": "6"},
+                            {"product": "4216313", "shop": "5", "quantity": "7"}]}
 
     order_change_data = {"items": {"product": "4216292", "shop": "1", "quantity": "28"}}
     order_delete_data = {"items": [{"product": "4216292", "shop": "1"},
@@ -141,14 +143,14 @@ if __name__ == "__main__":
     # registration(registration_data_2)
     # auth(auth_data_1)
     # auth(auth_data_2)
-    # update(headers_1, data_1)
+    update(headers_1, data_3)
     # update(headers_2, data_2)
     # show_products(headers_1)
     # add_order_to_basket(headers_1, order_data)
     # change_basket(headers_1, order_change_data)
     # delete_item_basket(headers_1, order_delete_data)
     # get_basket(headers_1)
-    confirm_order(headers_1, order_confirm_data_1)
+    # confirm_order(headers_1, order_confirm_data_1)
     # get_order(headers_1)
     # get_orders(headers_1)
     # confirm_order(headers_1, order_confirm_data_2)

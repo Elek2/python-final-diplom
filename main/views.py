@@ -73,60 +73,55 @@ class PartnerUpdate(APIView):
         response = requests.get(url)
         if response.status_code == 200:
             stream = requests.get(url).content
-        data = yaml.load(stream, Loader=yaml.Loader)
 
-        # try:
-        shop, _ = Shop.objects.get_or_create(
-            name=data['shop'],
-            shop_user=request.user,
-        )
-        shop.url = request.data['url']
-        shop.save()
+        # file = request.data.get('file')
+        # stream = open(file, mode='r', encoding='utf-8')
 
-        for category in data['categories']:
-            current_category, _ = Category.objects.get_or_create(
-                id=category['id'],
-                name=category['name']
+            data = yaml.load(stream, Loader=yaml.Loader)
+
+            shop, _ = Shop.objects.get_or_create(
+                name=data['shop'],
+                shop_user=request.user,
             )
-            current_category.shop.add(shop)
-            current_category.save()
+            shop.url = request.data.get('url')
+            shop.save()
 
-        ProductInfo.objects.filter(shop_id=shop.id).delete()
-
-        for product in data['goods']:
-            new_product, _ = Product.objects.get_or_create(
-                id=product['id'],
-                category=Category.objects.get(id=product['category'])
-            )
-            new_product.name = product['name']
-            new_product.save()
-
-            new_product_info = ProductInfo.objects.create(
-                model=product['model'],
-                price=product['price'],
-                price_rrc=product['price_rrc'],
-                quantity=product['quantity'],
-                shop=shop,
-                product=new_product
-            )
-            for param_name, param_value in product['parameters'].items():
-                new_product_params = ProductParameter.objects.create(
-                    name=param_name,
-                    value=param_value,
-                    product_info=new_product_info
+            for category in data['categories']:
+                current_category, _ = Category.objects.get_or_create(
+                    id=category['id'],
+                    name=category['name']
                 )
+                current_category.shop.add(shop)
+                current_category.save()
+
+            ProductInfo.objects.filter(shop_id=shop.id).delete()
+
+            for product in data['goods']:
+                new_product, _ = Product.objects.get_or_create(
+                    id=product['id'],
+                    category=Category.objects.get(id=product['category'])
+                )
+                new_product.name = product['name']
+                new_product.save()
+
+                new_product_info = ProductInfo.objects.create(
+                    model=product['model'],
+                    price=product['price'],
+                    price_rrc=product['price_rrc'],
+                    quantity=product['quantity'],
+                    shop=shop,
+                    product=new_product
+                )
+                for param_name, param_value in product['parameters'].items():
+                    new_product_params = ProductParameter.objects.create(
+                        name=param_name,
+                        value=param_value,
+                        product_info=new_product_info
+                    )
 
         return JsonResponse({'Status': True, 'Massage': 'Товары успешно обновлены'})
 
         # return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'})
-
-
-class ProductView(ListAPIView):
-    """
-    Класс для просмотра списка товаров
-    """
-    queryset = Product.objects.all()
-    serializer_class = ProductSerializer
 
 
 class ProductInfoViewSet(ReadOnlyModelViewSet):
@@ -209,8 +204,6 @@ class BasketView(APIView):
                     pass
             return JsonResponse({'Status': True, 'Message': 'Товары успешно удалены'})
         return JsonResponse({'Status': False, 'Errors': 'Данные не получены'})
-
-
 
 
 class OrderView(APIView):
