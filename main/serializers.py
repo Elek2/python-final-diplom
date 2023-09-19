@@ -67,12 +67,19 @@ class ProductParameterSerializer(serializers.ModelSerializer):
 class ProductInfoSerializer(serializers.ModelSerializer):
     product = serializers.StringRelatedField()
     shop = serializers.StringRelatedField()
+
+    class Meta:
+        model = ProductInfo
+        fields = ['model', 'product', 'shop', 'quantity', 'price']
+        read_only_fields = ('id',)
+
+
+class ProductInfoDetailSerializer(ProductInfoSerializer):
     product_param = ProductParameterSerializer(many=True)
 
     class Meta:
         model = ProductInfo
-        fields = ['model', 'product', 'shop', 'quantity', 'price_rrc', 'product_param']
-        read_only_fields = ('id',)
+        fields = ['model', 'product', 'shop', 'quantity', 'price', 'price_rrc', 'product_param']
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -89,7 +96,7 @@ class BasketSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderItem
-        fields = ('order', 'product', 'shop', 'value')
+        fields = ('order', 'product', 'shop', 'quantity')
         read_only_fields = ('id',)
 
     def create(self, validated_data):
@@ -97,10 +104,10 @@ class BasketSerializer(serializers.ModelSerializer):
             order=validated_data['order'],
             product=validated_data['product'],
             shop=validated_data['shop'],
-            defaults={'value': validated_data['value']}
+            defaults={'quantity': validated_data['quantity']}
         )
         if not item_created:
-            basket_item.value += validated_data['value']
+            basket_item.quantity += validated_data['quantity']
         basket_item.save()
         return basket_item
 

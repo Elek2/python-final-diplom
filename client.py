@@ -34,7 +34,7 @@ def auth(auth_data):
 
 def show_products(headers):
     response = requests.get(
-        "http://127.0.0.1:8000/api/v1/products/?shop=1",
+        "http://127.0.0.1:8000/api/v1/products/",
         headers=headers
     )
 
@@ -100,30 +100,30 @@ def get_order(headers):
     pprint(response.json())
 
 if __name__ == "__main__":
-    headers_1 = {'Authorization': f'Token 92d418eccb78065f86478e58b26f7da548223562',
+    headers_1 = {'Authorization': f'Token f017c619dab26c37630415361ef0e653b89de8fb',
                  }
     data_1 = {
         'url': 'https://raw.githubusercontent.com/Elek2/python-final-diplom/'
                'a00c9c36b4e9cb750bd6600af64187625f56ef50/data/shop1.yaml'}
 
-    headers_2 = {'Authorization': f'Token 44861828b8c1e472b1cfb1d9643a2f4e6658e1fd'}
+    headers_2 = {'Authorization': f'Token fd9dc8d2466e6ea37035955c6eb064eaf5b4e072'}
     data_2 = {
         'url': 'https://raw.githubusercontent.com/Elek2/python-final-diplom/'
                'a00c9c36b4e9cb750bd6600af64187625f56ef50/data/shop2.yaml'}
 
-    registration_data_1 = {'email': 'user_17@main.ru', 'password': '666'}
-    registration_data_2 = {'email': 'user_2@main.ru', 'password': '222'}
+    registration_data_1 = {'email': 'user_1@main.ru', 'password': '111'}
+    registration_data_2 = {'email': 'user_3@main.ru', 'password': '222'}
     auth_data_1 = {'email': 'user_1@main.ru', 'password': '111'}
     auth_data_2 = {'email': 'user_2@main.ru', 'password': '222'}
 
-    order_data = {"items": [{"product": "4216292", "shop": "1", "value": "33"},
-                            {"product": "4216292", "shop": "1", "value": "8"},
-                            {"product": "4216313", "shop": "1", "value": "4"},
-                            {"product": "4216226", "shop": "2", "value": "5"},
-                            {"product": "4216292", "shop": "2", "value": "6"},
-                            {"product": "4216313", "shop": "1", "value": "7"}]}
+    order_data = {"items": [{"product": "4216292", "shop": "1", "quantity": "3"},
+                            {"product": "4216292", "shop": "1", "quantity": "8"},
+                            {"product": "4216313", "shop": "1", "quantity": "4"},
+                            {"product": "4216226", "shop": "2", "quantity": "5"},
+                            {"product": "4216292", "shop": "2", "quantity": "6"},
+                            {"product": "4216313", "shop": "1", "quantity": "7"}]}
 
-    order_change_data = {"items": {"product": "4216292", "shop": "1", "value": "28"}}
+    order_change_data = {"items": {"product": "4216292", "shop": "1", "quantity": "28"}}
     order_delete_data = {"items": [{"product": "4216292", "shop": "1"},
                                    {"product": "4216313", "shop": "1"}]}
 
@@ -137,7 +137,7 @@ if __name__ == "__main__":
 
     order_confirm_data_2 = {"contact": {"id": "1"}}
 
-    registration(registration_data_1)
+    # registration(registration_data_1)
     # registration(registration_data_2)
     # auth(auth_data_1)
     # auth(auth_data_2)
@@ -145,7 +145,7 @@ if __name__ == "__main__":
     # update(headers_2, data_2)
     # show_products(headers_1)
     # add_order_to_basket(headers_1, order_data)
-    # change_basket(headers_1, order_change_data)
+    change_basket(headers_1, order_change_data)
     # delete_item_basket(headers_1, order_delete_data)
     # get_basket(headers_1)
     # confirm_order(headers_1, order_confirm_data_1)

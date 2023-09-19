@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 import requests
 import yaml
-from django.contrib.sites import requests
+# from django.contrib.sites import requests
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from django.db.models import F, Sum
@@ -15,13 +15,13 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from main.serializers import (BasketListSerializer, BasketSerializer,
                               ContactSerializer, OrderSerializer,
                               ProductInfoSerializer, ProductSerializer,
                               UserAuthTokenSerializer,
-                              UserRegistrationSerializer)
+                              UserRegistrationSerializer, ProductInfoDetailSerializer)
 from django.conf import settings
 
 from .models import (Category, Contact, Order, OrderItem, Product, ProductInfo,
@@ -33,7 +33,7 @@ class Registration(CreateAPIView):
     serializer_class = UserRegistrationSerializer
     permission_classes = []
 
-    def create(self, request, *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -51,7 +51,7 @@ class Registration(CreateAPIView):
             'message': 'Регистрация успешно завершена.',
             'email': user.email,
         }
-        return Response(response_data, status=status.HTTP_201_CREATED)
+        return JsonResponse(response_data)
 
 
 class CustomAuthToken(ObtainAuthToken):
@@ -63,16 +63,16 @@ class CustomAuthToken(ObtainAuthToken):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
         token, created = Token.objects.get_or_create(user=user)
-        return Response({
-            'token': token.key,
-        })
+        return JsonResponse({'token': token.key})
 
 
-class Partner(APIView):
+class PartnerUpdate(APIView):
 
     def post(self, request):
         url = request.data.get('url')
-        stream = requests.get(url).content
+        response = requests.get(url)
+        if response.status_code == 200:
+            stream = requests.get(url).content
         data = yaml.load(stream, Loader=yaml.Loader)
 
         # try:
@@ -88,7 +88,7 @@ class Partner(APIView):
                 id=category['id'],
                 name=category['name']
             )
-            current_category.shops.add(shop)
+            current_category.shop.add(shop)
             current_category.save()
 
         ProductInfo.objects.filter(shop_id=shop.id).delete()
@@ -116,7 +116,7 @@ class Partner(APIView):
                     product_info=new_product_info
                 )
 
-        return JsonResponse({'Status': True})
+        return JsonResponse({'Status': True, 'Massage': 'Товары успешно обновлены'})
 
         # return JsonResponse({'Status': False, 'Errors': 'Не указаны все необходимые аргументы'})
 
@@ -129,14 +129,18 @@ class ProductView(ListAPIView):
     serializer_class = ProductSerializer
 
 
-class ProductInfoViewSet(ModelViewSet):
+class ProductInfoViewSet(ReadOnlyModelViewSet):
     queryset = ProductInfo.objects.all()
     serializer_class = ProductInfoSerializer
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['shop']
+    filterset_fields = ['shop', 'model', 'product']
     # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+    permission_classes = []
 
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return ProductInfoDetailSerializer
+        return self.serializer_class
 
 class BasketView(APIView):
     """
