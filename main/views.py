@@ -153,7 +153,7 @@ class BasketView(APIView):
             user_id=request.user.id, status='basket').prefetch_related(
             'ordered_items__product__product_info',
         ).annotate(
-            total_sum=Sum(F('ordered_items__value') * F('ordered_items__product__product_info__price'))).distinct()
+            total_sum=Sum(F('ordered_items__quantity') * F('ordered_items__product__product_info__price'))).distinct()
 
         serializer = BasketListSerializer(basket, many=True)
         return JsonResponse(serializer.data, safe=False)
@@ -239,8 +239,8 @@ class OrderView(APIView):
                 'Наименование товара': item.product.name,
                 'Магазин': item.shop.name,
                 'Цена': self.format_price(price),
-                'Количество': item.value,
-                'Сумма': self.format_price(item.value * price)
+                'Количество': item.quantity,
+                'Сумма': self.format_price(item.quantity * price)
             })
 
         response_data['Данные получателя'] = {
@@ -267,7 +267,7 @@ class OrderView(APIView):
                 filter(user_id=request.user.id).\
                 exclude(status='basket').\
                 prefetch_related('ordered_items__product__product_info').\
-                annotate(total_sum=Sum(F('ordered_items__value') * F('ordered_items__product__product_info__price')))
+                annotate(total_sum=Sum(F('ordered_items__quantity') * F('ordered_items__product__product_info__price')))
             serializer = OrderSerializer(orders, many=True)
             return JsonResponse({'Status': True, 'Заказы': serializer.data})
 
@@ -281,7 +281,7 @@ class OrderView(APIView):
         if contact_data:
             contact_data.update({'user': request.user.id})
             try:
-                contact = Contact.objects.get(id=contact_data.get('id'))
+                contact = Contact.objects.get(**contact_data)
             except ObjectDoesNotExist:
                 serializer = ContactSerializer(data=contact_data)
                 if serializer.is_valid():

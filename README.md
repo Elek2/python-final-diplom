@@ -23,29 +23,50 @@ https://raw.githubusercontent.com/Elek2/python-final-diplom/a00c9c36b4e9cb750bd6
 4) Список товаров  
 *GET*  
 получаем общий список товаров с фильтрами по shop и model  
-`URL: /api/v1/products/?shop=<pk>`  
+`URL: /api/v1/products/?shop=<pk>/`  
 `Respose: [{'model', 'product', 'shop', 'quantity', 'price'}]`
 5) Карточка товара  
 *GET*  
-`URL: /api/v1/products/<pk>`
+`URL: /api/v1/products/<pk>/`  
 `Respose: {'model', 'product', 'shop', 'quantity', 'price', 'price_rrc', 'product_param'}`
 6) Добавление заказа в корзину  
 *POST*  
-`data = {'url': '<your_url_for_yaml_file>'}`  
+`URL: /api/v1/products/basket/`  
 `headers = {'Authorization': 'Token <your_token>'}`  
 `data = {"items":[`  
 `{"product": "4216292", "shop": "1", "quantity": "3"},`  
 `{"product": "4216292", "shop": "2", "quantity": "8"},`  
 `]}`  
 `Respose: {'Status': True, 'Massage': 'Товары успешно добавлены в корзину'}`
-7) Просмотр корзины  
-`URL: /api/v1/api-token-auth/`   
-
-`Respose: `
+7) Изменение товара в корзине  
+*PUT*  
+`URL: /api/v1/products/basket/`  
+`headers = {'Authorization': 'Token <your_token>'}`  
+`data = {"items": {"product": "4216292", "shop": "1", "quantity": "3"}`  
+`Respose: {'Status': True, 'Massage': 'Товары успешно изменены'}`
+8) Удаление товаров из корзины  
+*DELETE*  
+`URL: /api/v1/products/basket/`  
+`headers = {'Authorization': 'Token <your_token>'}`  
+`data = {"items":[`  
+`{"product": "4216292", "shop": "1", "quantity": "3"},`  
+`{"product": "4216292", "shop": "2", "quantity": "8"},`  
+`]}`  
+`Respose: {'Status': True, 'Massage': 'Товары успешно удалены'}`
+8) Просмотр корзины 
+*GET*  
+`URL: /api/v1/products/basket/`  
+`headers = {'Authorization': 'Token <your_token>'}`  
+`Respose: [{'ordered_items': [{'order', 'product', 'quantity', 'shop'},],`  
+`'status': 'basket',`  
+`'total_sum': ,`  
+`'user': }]`  
 8) Подтверждение заказа и указание контактной информации  
-`URL: /api/v1/api-token-auth/`   
-`data = {'email': '<your_email>', 'password': '<your_password>'}`  
-`Respose: `
+*POST*  
+`URL: /api/v1/products/order/`  
+`headers = {'Authorization': 'Token <your_token>'}`  
+`{"contact": {'city':, 'street':, 'house':, 'structure':, 'apartment':, 'phone':,}}`  
+`Respose: {'Status': True, 'Massage': 'Товары успешно добавлены в корзину'}`
 9) Просмотр заказов  
 `URL: /api/v1/api-token-auth/`   
 `data = {'email': '<your_email>', 'password': '<your_password>'}`  

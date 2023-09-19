@@ -100,21 +100,21 @@ def get_order(headers):
     pprint(response.json())
 
 if __name__ == "__main__":
-    headers_1 = {'Authorization': f'Token f017c619dab26c37630415361ef0e653b89de8fb',
+    headers_1 = {'Authorization': f'Token 73a29146cda134164b17d084e2ed759d4e798817',
                  }
     data_1 = {
         'url': 'https://raw.githubusercontent.com/Elek2/python-final-diplom/'
                'a00c9c36b4e9cb750bd6600af64187625f56ef50/data/shop1.yaml'}
 
-    headers_2 = {'Authorization': f'Token fd9dc8d2466e6ea37035955c6eb064eaf5b4e072'}
+    headers_2 = {'Authorization': f'Token 401e6beb3d1237c11c88fd18483fbaa34c8234ad'}
     data_2 = {
         'url': 'https://raw.githubusercontent.com/Elek2/python-final-diplom/'
                'a00c9c36b4e9cb750bd6600af64187625f56ef50/data/shop2.yaml'}
 
-    registration_data_1 = {'email': 'user_1@main.ru', 'password': '111'}
+    registration_data_1 = {'email': 'user_8@main.ru', 'password': '111'}
     registration_data_2 = {'email': 'user_3@main.ru', 'password': '222'}
     auth_data_1 = {'email': 'user_1@main.ru', 'password': '111'}
-    auth_data_2 = {'email': 'user_2@main.ru', 'password': '222'}
+    auth_data_2 = {'email': 'user_3@main.ru', 'password': '222'}
 
     order_data = {"items": [{"product": "4216292", "shop": "1", "quantity": "3"},
                             {"product": "4216292", "shop": "1", "quantity": "8"},
@@ -145,10 +145,10 @@ if __name__ == "__main__":
     # update(headers_2, data_2)
     # show_products(headers_1)
     # add_order_to_basket(headers_1, order_data)
-    change_basket(headers_1, order_change_data)
+    # change_basket(headers_1, order_change_data)
     # delete_item_basket(headers_1, order_delete_data)
     # get_basket(headers_1)
-    # confirm_order(headers_1, order_confirm_data_1)
+    confirm_order(headers_1, order_confirm_data_1)
     # get_order(headers_1)
     # get_orders(headers_1)
     # confirm_order(headers_1, order_confirm_data_2)

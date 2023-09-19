@@ -47,10 +47,10 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
     email = models.EmailField(verbose_name='Email', unique=True, blank=False, null=False)
     username = models.CharField(verbose_name='Имя', max_length=50, unique=False, blank=True)
-    last_name = models.CharField(verbose_name='Фамилия', max_length=50, blank=False, null=True)
-    second_name = models.CharField(verbose_name='Отчество', max_length=50, blank=True, null=True)
-    company = models.CharField(verbose_name='Компания', max_length=100, blank=True, null=True)
-    position = models.CharField(verbose_name='Должность', max_length=50, blank=True, null=True)
+    last_name = models.CharField(verbose_name='Фамилия', max_length=50, blank=True)
+    second_name = models.CharField(verbose_name='Отчество', max_length=50, blank=True)
+    company = models.CharField(verbose_name='Компания', max_length=100, blank=True)
+    position = models.CharField(verbose_name='Должность', max_length=50, blank=True)
     objects = UserManager()
 
     class Meta:
