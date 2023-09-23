@@ -171,3 +171,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # определяет автоматическое присвоение первичного ключа в таблицах
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# celery
+CELERY_BROKER_URL = os.getenv('ENV_REDIS_BROKER')
+CELERY_RESULT_BACKEND = os.getenv('ENV_REDIS_BACK')
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
+ENV_REDIS_BROKER=redis://localhost:6379/0
+ENV_REDIS_BACK=redis://localhost:6379/1
+
+
