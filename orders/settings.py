@@ -29,20 +29,21 @@ SECRET_KEY = os.getenv('ENV_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('ENV_DEBUG')
 
-ALLOWED_HOSTS = os.getenv('ENV_ALLOWED_HOSTS').split(',')
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'rest_framework',
-    'rest_framework.authtoken',
+    'django.contrib.admin',  # админка
+    'django.contrib.auth',  # аутентификация, создание пользователей
+    'django.contrib.contenttypes',  # работа с типами контента
+    'django.contrib.sessions',  # управление сессиями (корзина, авторизация)
+    'django.contrib.messages',  # вывод сообщений об операциях от сервера к клиенту
+    'django.contrib.staticfiles',  # обработка статических файлов (CSS, JS, изображения)
+    'rest_framework',  # добавляет библиотеку Django REST framework
+    'rest_framework.authtoken',  # добавляет аутентификацию потокену для Django REST framework
+    'versatileimagefield',  # управление изображениями (вместо ImageField)
     'main',  # Наш проект
 ]
 
@@ -133,16 +134,15 @@ REST_FRAMEWORK = {
 # Определяем способ отправки электронной почты
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # для отправки писем в консоль (для тестов)
 
-# Определяем на какой адрес будут отправляться сообщения
+# Определяем на какой адрес будут отправляться сообщения по умолчанию
 EMAIL_HOST_USER = 'example@example.com'
 
-# Определяем c какого адреса будут отправляться сообщения
+# Определяем c какого адреса будут отправляться сообщения по умолчанию
 DEFAULT_FROM_EMAIL = 'noreply@example.com'
 
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/
-
 LANGUAGE_CODE = 'ru-RU'
 
 TIME_ZONE = 'Europe/Moscow'
@@ -158,16 +158,16 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
-
 STATIC_URL = '/static/'
 
 # устанавливает URL для управления изображениями.
 # Например для файла kofe.jpg: http://127.0.0.1:8000/media/kofe.jpg
 MEDIA_URL = '/media/'
 
-# устанавливает абсолютный путь к директории, где хранятся изображениями,
+# устанавливает абсолютный путь к директории, где хранятся медиа файлы,
 # без него все будут сохраняться в корневом каталоге
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+IMAGES_DIR = os.path.join(MEDIA_ROOT, 'images')
 
 # определяет автоматическое присвоение первичного ключа в таблицах
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -178,7 +178,3 @@ CELERY_RESULT_BACKEND = os.getenv('ENV_REDIS_BACK')
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
-ENV_REDIS_BROKER=redis://localhost:6379/0
-ENV_REDIS_BACK=redis://localhost:6379/1
-
-

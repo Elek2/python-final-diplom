@@ -1,5 +1,7 @@
 from collections import OrderedDict
 
+from .permissions import IsOwner
+from .tasks import send_registration_email
 import requests
 import yaml
 # from django.contrib.sites import requests
@@ -12,7 +14,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.generics import CreateAPIView, ListAPIView
+from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
@@ -21,37 +23,79 @@ from main.serializers import (BasketListSerializer, BasketSerializer,
                               ContactSerializer, OrderSerializer,
                               ProductInfoSerializer, ProductSerializer,
                               UserAuthTokenSerializer,
-                              UserRegistrationSerializer, ProductInfoDetailSerializer)
+                              ProductInfoDetailSerializer, UserSerializer, RegistrationSerializer)
 from django.conf import settings
 
 from .models import (Category, Contact, Order, OrderItem, Product, ProductInfo,
                      ProductParameter, Shop, User)
 
 
-class Registration(CreateAPIView):
+class RegistrationView(CreateAPIView):
     queryset = User.objects.all()
-    serializer_class = UserRegistrationSerializer
+    serializer_class = RegistrationSerializer
     permission_classes = []
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
+        if serializer.is_valid():
+            try:
+                user = serializer.save()
+            except IntegrityError as error:
+                return JsonResponse({'Status': False, 'Errors': str(error)})
+        else:
+            return JsonResponse({'Status': False, 'Errors': 'Неверный формат запроса'})
 
         # Отправка сообщения об успешной регистрации на email пользователя
-        subject = 'Регистрация успешно завершена'
-        message = f'Поздравляем, вы успешно зарегистрировались.' \
-                  f'\nНовый пользователь: {user.email},' \
-                  f'\nПароль: {request.data["password"]} '
-        from_email = settings.DEFAULT_FROM_EMAIL
-        recipient_list = [user.email]
-        send_mail(subject, message, from_email, recipient_list)
+        # Используем celery (метод delay)
+        send_registration_email.delay(user.email, request.data["password"])
 
         response_data = {
             'message': 'Регистрация успешно завершена.',
             'email': user.email,
         }
         return JsonResponse(response_data)
+
+
+class UserUpdateView(RetrieveUpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+    def put(self, request, *args, **kwargs):
+        instance = User.objects.get(id=request.user.id)
+        serializer = self.get_serializer(instance, data=request.data)
+        if serializer.is_valid():
+            try:
+                serializer.save()
+            except IntegrityError as error:
+                return JsonResponse({'Status': False, 'Errors': str(error)})
+        else:
+            return JsonResponse({'Status': False, 'Errors': 'Неверный формат запроса'})
+
+        response_data = {
+            'message': 'Данные пользователя успешно изменены',
+            'Status': True,
+        }
+        return JsonResponse(response_data)
+
+    def get_permissions(self):
+        """Получение прав для действий."""
+        return [IsOwner()]
+
+    #
+    # def post(self, request, *args, **kwargs):
+    #     serializer = self.get_serializer(data=request.data)
+    #     serializer.is_valid(raise_exception=True)
+    #     user = serializer.save()
+    #
+    #     # Отправка сообщения об успешной регистрации на email пользователя
+    #     # Используем celery (метод delay)
+    #     send_registration_email.delay(user.email, request.data["password"])
+    #
+    #     response_data = {
+    #         'message': 'Регистрация успешно завершена.',
+    #         'email': user.email,
+    #     }
+    #     return JsonResponse(response_data)
 
 
 class CustomAuthToken(ObtainAuthToken):
@@ -70,54 +114,56 @@ class PartnerUpdate(APIView):
 
     def post(self, request):
         url = request.data.get('url')
-        response = requests.get(url)
-        if response.status_code == 200:
-            stream = requests.get(url).content
+        file = request.data.get('file')
+        if url:
+            response = requests.get(url)
+            if response.status_code == 200:
+                stream = requests.get(url).content
+        elif file:
+            file = request.data.get('file')
+            stream = open(file, mode='r', encoding='utf-8')
 
-        # file = request.data.get('file')
-        # stream = open(file, mode='r', encoding='utf-8')
+        data = yaml.load(stream, Loader=yaml.Loader)
 
-            data = yaml.load(stream, Loader=yaml.Loader)
+        shop, _ = Shop.objects.get_or_create(
+            name=data['shop'],
+            shop_user=request.user,
+        )
+        shop.url = request.data.get('url')
+        shop.save()
 
-            shop, _ = Shop.objects.get_or_create(
-                name=data['shop'],
-                shop_user=request.user,
+        for category in data['categories']:
+            current_category, _ = Category.objects.get_or_create(
+                id=category['id'],
+                name=category['name']
             )
-            shop.url = request.data.get('url')
-            shop.save()
+            current_category.shop.add(shop)
+            current_category.save()
 
-            for category in data['categories']:
-                current_category, _ = Category.objects.get_or_create(
-                    id=category['id'],
-                    name=category['name']
+        ProductInfo.objects.filter(shop_id=shop.id).delete()
+
+        for product in data['goods']:
+            new_product, _ = Product.objects.get_or_create(
+                id=product['id'],
+                category=Category.objects.get(id=product['category'])
+            )
+            new_product.name = product['name']
+            new_product.save()
+
+            new_product_info = ProductInfo.objects.create(
+                model=product['model'],
+                price=product['price'],
+                price_rrc=product['price_rrc'],
+                quantity=product['quantity'],
+                shop=shop,
+                product=new_product
+            )
+            for param_name, param_value in product['parameters'].items():
+                new_product_params = ProductParameter.objects.create(
+                    name=param_name,
+                    value=param_value,
+                    product_info=new_product_info
                 )
-                current_category.shop.add(shop)
-                current_category.save()
-
-            ProductInfo.objects.filter(shop_id=shop.id).delete()
-
-            for product in data['goods']:
-                new_product, _ = Product.objects.get_or_create(
-                    id=product['id'],
-                    category=Category.objects.get(id=product['category'])
-                )
-                new_product.name = product['name']
-                new_product.save()
-
-                new_product_info = ProductInfo.objects.create(
-                    model=product['model'],
-                    price=product['price'],
-                    price_rrc=product['price_rrc'],
-                    quantity=product['quantity'],
-                    shop=shop,
-                    product=new_product
-                )
-                for param_name, param_value in product['parameters'].items():
-                    new_product_params = ProductParameter.objects.create(
-                        name=param_name,
-                        value=param_value,
-                        product_info=new_product_info
-                    )
 
         return JsonResponse({'Status': True, 'Massage': 'Товары успешно обновлены'})
 
@@ -136,6 +182,7 @@ class ProductInfoViewSet(ReadOnlyModelViewSet):
         if self.action == 'retrieve':
             return ProductInfoDetailSerializer
         return self.serializer_class
+
 
 class BasketView(APIView):
     """
@@ -295,4 +342,3 @@ class OrderView(APIView):
 
             return JsonResponse({'Status': True, 'Order': self.show_result(new_order)})
         return JsonResponse({'Status': False, 'Errors': 'Данные не получены'})
-

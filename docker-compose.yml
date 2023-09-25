@@ -1,0 +1,70 @@
+version: '3'
+services:
+  # Контейнер с Django приложением
+  django:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.docker
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - .:/app
+    command: sh -c "python manage.py migrate && gunicorn orders.wsgi:application --bind 0.0.0.0:8000"
+
+  # Контейнер с PostgreSQL
+  db:
+    image: postgres:14.3-alpine3.15
+    env_file:
+      - .env.docker
+    environment:
+      POSTGRES_USER: ${ENV_DB_USER}
+      POSTGRES_PASSWORD: ${ENV_DB_PASSWORD}
+      POSTGRES_DB: ${ENV_DB_NAME}
+
+    ports:
+      - "5431:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Контейнер с Redis
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+
+  # Контейнер с Celery worker
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile-celery
+    env_file:
+      - .env.docker
+    depends_on:
+      - db
+      - redis
+    command: celery -A orders worker -l info
+
+  pgadmin:
+      image: dpage/pgadmin4:latest
+      env_file:
+        - .env.docker
+      environment:
+          PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+          PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+          PGADMIN_LISTEN_PORT: ${PGADMIN_PORT}
+      ports:
+          - "5430:80"
+      links:
+        - "db:pgsql-server"
+      depends_on:
+          - db
+#      networks:
+#        dev_network:
+#          aliases:
+#            - pdadmi

@@ -23,6 +23,16 @@ def registration(registration_data):
     print(response.json())
 
 
+def user_change(user_data, headers):
+    response = requests.put(
+        "http://127.0.0.1:8000/api/v1/user/2/",
+        data=user_data,
+        headers=headers,
+    )
+
+    print(response.json())
+
+
 def auth(auth_data):
     response = requests.post(
         "http://127.0.0.1:8000/api/v1/api-token-auth/",
@@ -100,18 +110,20 @@ def get_order(headers):
     pprint(response.json())
 
 if __name__ == "__main__":
-    headers_1 = {'Authorization': f'Token 70dd7067b4adb548552f3a7978f7b7fa9ad5b044',
+    headers_1 = {'Authorization': f'Token b62f46b49d0c71af400298e8aba003ba77930b53',
                  }
     data_1 = {
         'url': 'https://raw.githubusercontent.com/Elek2/python-final-diplom/'
                'a00c9c36b4e9cb750bd6600af64187625f56ef50/data/shop1.yaml'}
     data_3 = {'file': 'data/shop1.yaml'}
 
-    headers_2 = {'Authorization': f'Token d04b3c75c07f0ab48083b5179c0204c02ca7edf5'}
+    headers_2 = {'Authorization': f'Token 75f73e39ae98aa9a27aa371cf0aef854abe5f39b'}
     data_2 = {
         'url': 'https://raw.githubusercontent.com/Elek2/python-final-diplom/'
                'a00c9c36b4e9cb750bd6600af64187625f56ef50/data/shop2.yaml'}
     data_4 = {'file': 'data/shop2.yaml'}
+
+    user_data_1 = {'username': 'Bdf', 'last_name': 'as', 'second_name': 'Иванович'}
 
     registration_data_1 = {'email': 'user_8@main.ru', 'password': '111'}
     registration_data_2 = {'email': 'user_3@main.ru', 'password': '222'}
@@ -143,7 +155,8 @@ if __name__ == "__main__":
     # registration(registration_data_2)
     # auth(auth_data_1)
     # auth(auth_data_2)
-    update(headers_1, data_3)
+    user_change(user_data_1, headers_1)
+    # update(headers_1, data_3)
     # update(headers_2, data_2)
     # show_products(headers_1)
     # add_order_to_basket(headers_1, order_data)

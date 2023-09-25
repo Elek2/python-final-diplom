@@ -1,21 +1,48 @@
 from django.utils import dateformat
 from rest_framework import serializers
+from .tasks import download_and_save_image
 
 from main.models import (Category, Contact, Order, OrderItem, Product,
                          ProductInfo, ProductParameter, Shop, User)
 
 
-class UserRegistrationSerializer(serializers.ModelSerializer):
+class RegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('email', 'password',)
         read_only_fields = ('id',)
+        extra_kwargs = {
+            'first_name': {'required': False},
+            'last_name': {'required': False},
+        }
 
     def create(self, validated_data):
         user = super().create(validated_data)
         user.set_password(validated_data.get('password'))
         user.save()
         return user
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('username', 'last_name', 'second_name', 'company', 'position', 'image')
+        # extra_kwargs = {
+        #     'last_name': {'required': False},
+        #     'second_name': {'required': False},
+        # }
+
+    def update(self, instance, validated_data):
+        if self.data.get('image'):
+            image_url = self.initial_data.pop('image')
+            download_and_save_image.delay(instance, image_url)
+
+        for field_name, value in validated_data.items():
+            setattr(instance, field_name, value)
+
+        instance.save()
+
+        return instance
 
 
 class UserAuthTokenSerializer(serializers.Serializer):

@@ -1,5 +1,6 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
+from versatileimagefield.fields import VersatileImageField
 from django.db import models
 from slugify import slugify
 
@@ -51,6 +52,8 @@ class User(AbstractUser):
     second_name = models.CharField(verbose_name='Отчество', max_length=50, blank=True)
     company = models.CharField(verbose_name='Компания', max_length=100, blank=True)
     position = models.CharField(verbose_name='Должность', max_length=50, blank=True)
+    image = VersatileImageField(verbose_name='Изображение', blank=True)
+
     objects = UserManager()
 
     class Meta:
@@ -139,7 +142,8 @@ class Product(models.Model):
     Список товаров
     """
     name = models.CharField(verbose_name='Название', max_length=100)
-    slug = models.SlugField(verbose_name='Slug-название', allow_unicode=True, blank=True, null=False)
+    slug = models.SlugField(verbose_name='Slug', allow_unicode=True, blank=True, null=False)
+    image = VersatileImageField(verbose_name='Изображение', blank=True)
 
     # Автоматически генерируем slug на основе имени товара переопределяя метод save
     def save(self, *args, **kwargs):
