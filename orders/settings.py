@@ -29,7 +29,7 @@ SECRET_KEY = os.getenv('ENV_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('ENV_DEBUG')
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.getenv('ENV_ALLOWED_HOSTS')
 
 
 # Application definition
@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',  # обработка статических файлов (CSS, JS, изображения)
     'rest_framework',  # добавляет библиотеку Django REST framework
     'rest_framework.authtoken',  # добавляет аутентификацию потокену для Django REST framework
-    'versatileimagefield',  # управление изображениями (вместо ImageField)
+    'easy_thumbnails',  # улучшение ImageField в models
+    'social_django',  # авторизация через соцсети
     'main',  # Наш проект
 ]
 
@@ -59,10 +60,11 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'orders.urls'
 
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -70,6 +72,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
             ],
         },
     },
@@ -80,7 +84,6 @@ WSGI_APPLICATION = 'orders.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': os.getenv('ENV_DB_ENGINE'),
@@ -116,6 +119,7 @@ AUTH_USER_MODEL = 'main.User'  # указываем Django использова�
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated'
@@ -128,8 +132,25 @@ REST_FRAMEWORK = {
         'user': '20/minute',
         'anon': '10/minute'
     },
-
 }
+
+AUTHENTICATION_BACKENDS = (
+    'social_core.backends.vk.VKOAuth2',           # бекенд авторизации через ВКонтакте
+    'social_core.backends.github.GithubOAuth2',   # бекенд авторизации через GitHub
+    'django.contrib.auth.backends.ModelBackend',  # бекенд классической аутентификации, обычный логин и пароль
+)
+
+SOCIAL_AUTH_VK_OAUTH2_KEY = os.getenv('VK_KEY')
+SOCIAL_AUTH_VK_OAUTH2_SECRET = os.getenv('VK_SECRET')
+
+SOCIAL_AUTH_GITHUB_KEY = os.getenv('GITHUB_KEY')
+SOCIAL_AUTH_GITHUB_SECRET = os.getenv('GITHUB_SECRET')
+
+SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
+SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = ['email']
+
+LOGIN_URL = 'auth'
+LOGIN_REDIRECT_URL = 'basket'
 
 # Определяем способ отправки электронной почты
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # для отправки писем в консоль (для тестов)
@@ -172,9 +193,81 @@ IMAGES_DIR = os.path.join(MEDIA_ROOT, 'images')
 # определяет автоматическое присвоение первичного ключа в таблицах
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# подключение JSONB полей Postgres для авторизации чз соцсети
+SOCIAL_AUTH_JSONFIELD_ENABLED = True
+
 # celery
 CELERY_BROKER_URL = os.getenv('ENV_REDIS_BROKER')
 CELERY_RESULT_BACKEND = os.getenv('ENV_REDIS_BACK')
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',  # Уровень логирования (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+            'class': 'logging.FileHandler',
+            'filename': 'django.log',  # Путь к файлу логов
+            'encoding': 'utf-8',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
+
+# Разрешаем создавать пользователей через social_auth
+SOCIAL_AUTH_CREATE_USERS = True
+
+SOCIAL_AUTH_PIPELINE = (
+    # Get the information we can about the user and return it in a simple
+    # format to create the user instance later. In some cases the details are
+    # already part of the auth response from the provider, but sometimes this
+    # could hit a provider API.
+    'social_core.pipeline.social_auth.social_details',
+
+    # Get the social uid from whichever service we're authing thru. The uid is
+    # the unique identifier of the given user in the provider.
+    'social_core.pipeline.social_auth.social_uid',
+
+    # Verifies that the current auth process is valid within the current
+    # project, this is where emails and domains whitelists are applied (if
+    # defined).
+    # 'social_core.pipeline.social_auth.auth_allowed',
+
+    # Checks if the current social-account is already associated in the site.
+    'social_core.pipeline.social_auth.social_user',
+
+    # Make up a username for this person, appends a random string at the end if
+    # there's any collision.
+    # 'social_core.pipeline.user.get_username',
+
+    # Send a validation email to the user to verify its email address.
+    # Disabled by default.
+    # 'social_core.pipeline.mail.mail_validation',
+
+    # Associates the current social details with another user account with
+    # a similar email address. Disabled by default.
+    # 'social_core.pipeline.social_auth.associate_by_email',
+
+    # Create a user account if we haven't found one yet.
+    'social_core.pipeline.user.create_user',
+
+    # Create the record that associates the social account with the user.
+    'social_core.pipeline.social_auth.associate_user',
+
+    # Populate the extra_data field in the social record with the values
+    # specified by settings (and the default ones like access_token, etc).
+    'social_core.pipeline.social_auth.load_extra_data',
+
+    # Update the user record with any changed info from the auth service.
+    'social_core.pipeline.user.user_details',
+)
+

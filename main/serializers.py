@@ -24,25 +24,10 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = User
-        fields = ('username', 'last_name', 'second_name', 'company', 'position', 'image')
-        # extra_kwargs = {
-        #     'last_name': {'required': False},
-        #     'second_name': {'required': False},
-        # }
-
-    def update(self, instance, validated_data):
-        if self.data.get('image'):
-            image_url = self.initial_data.pop('image')
-            download_and_save_image.delay(instance, image_url)
-
-        for field_name, value in validated_data.items():
-            setattr(instance, field_name, value)
-
-        instance.save()
-
-        return instance
+        fields = ('username', 'last_name', 'second_name', 'company', 'position')
 
 
 class UserAuthTokenSerializer(serializers.Serializer):

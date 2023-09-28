@@ -1,6 +1,5 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
-from versatileimagefield.fields import VersatileImageField
 from django.db import models
 from slugify import slugify
 
@@ -46,13 +45,13 @@ class User(AbstractUser):
     """
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
-    email = models.EmailField(verbose_name='Email', unique=True, blank=False, null=False)
+    email = models.EmailField(verbose_name='Email', unique=True, blank=False, null=True)
     username = models.CharField(verbose_name='Имя', max_length=50, unique=False, blank=True)
     last_name = models.CharField(verbose_name='Фамилия', max_length=50, blank=True)
     second_name = models.CharField(verbose_name='Отчество', max_length=50, blank=True)
     company = models.CharField(verbose_name='Компания', max_length=100, blank=True)
     position = models.CharField(verbose_name='Должность', max_length=50, blank=True)
-    image = VersatileImageField(verbose_name='Изображение', blank=True)
+    image = models.ImageField(verbose_name='Изображение', blank=True)
 
     objects = UserManager()
 
@@ -143,7 +142,7 @@ class Product(models.Model):
     """
     name = models.CharField(verbose_name='Название', max_length=100)
     slug = models.SlugField(verbose_name='Slug', allow_unicode=True, blank=True, null=False)
-    image = VersatileImageField(verbose_name='Изображение', blank=True)
+    image = models.ImageField(verbose_name='Изображение', blank=True)
 
     # Автоматически генерируем slug на основе имени товара переопределяя метод save
     def save(self, *args, **kwargs):
