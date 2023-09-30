@@ -12,11 +12,17 @@ WORKDIR /app
 
 # Устанавливаем зависимости
 # RUN работает во время создания образа
-RUN pip install -r requirements.txt
+RUN apt update
+RUN apt install libmagic1
+RUN pip install --no-cache-dir -r requirements.txt
+
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.7.3/wait /wait
+RUN chmod +x /wait
 
 # Опционально: собираем статические файлы
-# RUN python manage.py collectstatic --noinput
+#RUN python manage.py collectstatic --noinput
 
+#ENTRYPOINT bash ./start_django.sh
 # Выполняем миграций и запускаем приложение
 # CMD работает во время запуска контейнера (аналог comand в docker-compose)
-# CMD ["sh", "-c", "python manage.py migrate && gunicorn orders.wsgi:application --bind 0.0.0.0:8000"]
+# CMD python manage.py migrate && gunicorn orders.wsgi:application --bind 0.0.0.0:8000

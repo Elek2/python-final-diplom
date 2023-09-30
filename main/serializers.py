@@ -1,9 +1,8 @@
 from django.utils import dateformat
 from rest_framework import serializers
-from .tasks import download_and_save_image
 
 from main.models import (Category, Contact, Order, OrderItem, Product,
-                         ProductInfo, ProductParameter, Shop, User)
+                         ProductInfo, ProductParameter, User)
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -24,7 +23,6 @@ class RegistrationSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = User
         fields = ('username', 'last_name', 'second_name', 'company', 'position')
@@ -58,10 +56,9 @@ class UserAuthTokenSerializer(serializers.Serializer):
 
 
 class ContactSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Contact
-        fields = ('id', 'city', 'street', 'house', 'structure', 'apartment', 'user', 'phone', )
+        fields = ('id', 'city', 'street', 'house', 'structure', 'apartment', 'user', 'phone',)
         read_only_fields = ('id',)
 
 
@@ -105,7 +102,6 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class BasketSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = OrderItem
         fields = ('order', 'product', 'shop', 'quantity')
@@ -135,24 +131,22 @@ class BasketListSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    Статус = serializers.CharField(source='get_status_display')
-    Сумма = serializers.SerializerMethodField()
+    status = serializers.CharField(source='get_status_display')
+    sum = serializers.SerializerMethodField()
     # dt = serializers.DateTimeField(format="%d %B %Y")  # время без локализации (15 September 2023)
-    Время_заказа = serializers.SerializerMethodField()  # время с локализацией (чз ф-ию get_dt (15 Сентября 2023))
-    Номер_заказа = serializers.IntegerField(source='id')
+    order_dt = serializers.SerializerMethodField()  # время с локализацией (чз ф-ию get_dt (15 Сентября 2023))
+    order_num = serializers.IntegerField(source='id')
 
     class Meta:
         model = Order
-        fields = ('Номер_заказа', 'Время_заказа', 'Статус', 'Сумма')
+        fields = ('order_num', 'order_dt', 'status', 'sum')
 
-    def get_Время_заказа(self, obj):
+    def get_order_dt(self, obj):
         return dateformat.format(obj.dt, "d E Y")
 
-    def get_Сумма(self, obj):
+    def get_sum(self, obj):
         # Форматируем сумму с разделителями тысяч
         return '{:,}'.format(obj.total_sum).replace(',', ' ')
-
-
 
 
 '''

@@ -62,7 +62,6 @@ def auth(auth_data):
         "http://127.0.0.1:8000/api/v1/api-token-auth/",
         data=auth_data,
     )
-
     print(response.text)
 
 
@@ -136,24 +135,24 @@ def get_order(headers):
 
 
 if __name__ == "__main__":
-    headers_1 = {'Authorization': f'Token b62f46b49d0c71af400298e8aba003ba77930b53',
+    headers_1 = {'Authorization': f'Token f22fa9e06096d14da179f8e4a6ea0342431ae4cb',
     }
     data_1 = {
         'url': 'https://raw.githubusercontent.com/Elek2/python-final-diplom/'
                'a00c9c36b4e9cb750bd6600af64187625f56ef50/data/shop1.yaml'}
     data_3 = {'file': 'data/shop1.yaml'}
 
-    headers_2 = {'Authorization': f'Token 75f73e39ae98aa9a27aa371cf0aef854abe5f39b'}
+    headers_2 = {'Authorization': f'Token 092d566ad84210f4c7f4af4e1247a51aba3f290b'}
     data_2 = {
         'url': 'https://raw.githubusercontent.com/Elek2/python-final-diplom/'
                'a00c9c36b4e9cb750bd6600af64187625f56ef50/data/shop2.yaml'}
     data_4 = {'file': 'data/shop2.yaml'}
 
     user_data_1 = {
-        'username': 'Bdf', 'last_name': 'as', 'second_name': 'Иванович',
-        'image': r'D:\PyProject\Netology\python-final-diplom\data\photo1695186000.jpeg'}
-    headers_user_data_1 = {'Authorization': f'Token b62f46b49d0c71af400298e8aba003ba77930b53',
-        'Content-Type': 'multipart/form-data'}
+        'username': 'Bdf', 'last_name': 'as', 'second_name': 'Иванович',}
+        # 'image': r'D:\PyProject\Netology\python-final-diplom\data\photo1695186000.jpeg'}
+    headers_user_data_1 = {'Authorization': f'Token f22fa9e06096d14da179f8e4a6ea0342431ae4cb',}
+        # 'Content-Type': 'multipart/form-data'}
 
     registration_data_1 = {'email': 'user_14@main.ru', 'password': '111'}
     registration_data_2 = {'email': 'user_3@main.ru', 'password': '222'}
@@ -163,9 +162,9 @@ if __name__ == "__main__":
     order_data = {"items": [{"product": "4216292", "shop": "1", "quantity": "3"},
         {"product": "4216292", "shop": "1", "quantity": "8"},
         {"product": "4216313", "shop": "1", "quantity": "4"},
-        {"product": "4216226", "shop": "5", "quantity": "5"},
-        {"product": "4216292", "shop": "5", "quantity": "6"},
-        {"product": "4216313", "shop": "5", "quantity": "7"}]}
+        {"product": "4216226", "shop": "2", "quantity": "5"},
+        {"product": "4216292", "shop": "2", "quantity": "6"},
+        {"product": "4216313", "shop": "2", "quantity": "7"}]}
 
     order_change_data = {"items": {"product": "4216292", "shop": "1", "quantity": "28"}}
     order_delete_data = {"items": [{"product": "4216292", "shop": "1"},
@@ -185,7 +184,7 @@ if __name__ == "__main__":
 
     # order_confirm_data_2 = {"contact": {"id": "1"}}
 
-    registration(registration_data_1)
+    # registration(registration_data_1)
     # registration(registration_data_2)
     # auth(auth_data_1)
     # auth(auth_data_2)
@@ -193,7 +192,7 @@ if __name__ == "__main__":
     # update(headers_1, data_3)
     # update(headers_2, data_2)
     # show_products(headers_1)
-    # add_order_to_basket(headers_1, order_data)
+    add_order_to_basket(headers_1, order_data)
     # change_basket(headers_1, order_change_data)
     # delete_item_basket(headers_1, order_delete_data)
     # get_basket(headers_1)

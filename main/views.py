@@ -1,6 +1,7 @@
 from collections import OrderedDict
 
 from django.shortcuts import render
+from rest_framework.permissions import IsAuthenticated
 
 from .permissions import IsOwner
 from .tasks import send_registration_email, download_and_save_image
@@ -32,6 +33,10 @@ def auth(request):
 
 
 class RegistrationView(CreateAPIView):
+    """
+    Регистрация пользователя
+    """
+
     queryset = User.objects.all()
     serializer_class = RegistrationSerializer
     permission_classes = []
@@ -63,17 +68,26 @@ class RegistrationView(CreateAPIView):
 
 
 class UserUpdateView(RetrieveUpdateAPIView):
+    """
+    Данные пользователя
+    """
+
     queryset = User.objects.all()
     serializer_class = UserSerializer
-
+    # permission_classes = []
     # parser_classes = [MultiPartParser]
 
     def put(self, request, *args, **kwargs):
+        """
+        Изменение данных пользователя
+        """
+
         instance = User.objects.get(id=request.user.id)
 
         data = request.data.copy()
-        image_file = data.pop('image', None)[0]
-
+        image_file = data.pop('image', None)
+        if image_file:
+            image_file = image_file[0]
         serializer = self.get_serializer(instance, data=data)
         if serializer.is_valid():
             try:
@@ -102,6 +116,9 @@ class UserUpdateView(RetrieveUpdateAPIView):
 
 
 class CustomAuthToken(ObtainAuthToken):
+    """
+    Аутентификация пользователя
+    """
 
     def post(self, request, *args, **kwargs):
         serializer = UserAuthTokenSerializer(
@@ -116,6 +133,10 @@ class CustomAuthToken(ObtainAuthToken):
 class PartnerUpdate(APIView):
 
     def post(self, request):
+        """
+         Обновление товаров в базе
+         """
+
         url = request.data.get('url')
         file = request.data.get('file')
         if url:
@@ -186,6 +207,10 @@ class PartnerUpdate(APIView):
 
 
 class ProductInfoViewSet(ReadOnlyModelViewSet):
+    """
+    Информация о товарах
+    """
+
     queryset = ProductInfo.objects.all()
     serializer_class = ProductInfoSerializer
     filter_backends = [DjangoFilterBackend]
@@ -204,6 +229,9 @@ class BasketView(APIView):
     """
 
     def get(self, request, *args, **kwargs):
+        """
+        Получение данных корзины пользователя
+        """
 
         basket = Order.objects.filter(
             user_id=request.user.id, status='basket').prefetch_related(
@@ -214,8 +242,11 @@ class BasketView(APIView):
         serializer = BasketListSerializer(basket, many=True)
         return JsonResponse(serializer.data, safe=False)
 
-    # редактировать корзину
     def post(self, request, *args, **kwargs):
+        """
+         Добавление товаров в корзину
+         """
+
         items_data = request.data.get('items')
         if items_data:
             basket, _ = Order.objects.get_or_create(user=request.user, status='basket')
@@ -234,6 +265,10 @@ class BasketView(APIView):
         return JsonResponse({'Status': False, 'Errors': 'Данные не получены'})
 
     def put(self, request, *args, **kwargs):
+        """
+         Изменение товаров в корзине
+         """
+
         item = request.data.get('items')
         if item:
             basket = Order.objects.get(user=request.user, status='basket')
@@ -251,6 +286,10 @@ class BasketView(APIView):
         return JsonResponse({'Status': False, 'Errors': 'Данные не получены'})
 
     def delete(self, request, *args, **kwargs):
+        """
+         Удаление товаров из корзины
+         """
+
         items_data = request.data.get('items')
         if items_data:
             basket = Order.objects.get(user=request.user, status='basket')
@@ -308,6 +347,10 @@ class OrderView(APIView):
         return response_data
 
     def get(self, request, order_id=None):
+        """
+        Список всех заказов
+        """
+
         if order_id is not None:
             # Если передан Id, получаем конкретный заказ
             try:
@@ -326,6 +369,10 @@ class OrderView(APIView):
             return JsonResponse({'Status': True, 'Заказы': serializer.data})
 
     def post(self, request, *args, **kwargs):
+        """
+        Заказ товаров из корзины
+        """
+
         try:
             new_order = Order.objects.get(user_id=request.user.id, status='basket')
         except ObjectDoesNotExist:

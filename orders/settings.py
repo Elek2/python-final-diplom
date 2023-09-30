@@ -29,23 +29,28 @@ SECRET_KEY = os.getenv('ENV_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('ENV_DEBUG')
 
-ALLOWED_HOSTS = os.getenv('ENV_ALLOWED_HOSTS')
+ALLOWED_HOSTS = [os.getenv('ENV_ALLOWED_HOSTS')]
+INTERNAL_IPS = ['127.0.0.1']  # для отладочного модуля
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'baton',  # апгрейд админки
     'django.contrib.admin',  # админка
     'django.contrib.auth',  # аутентификация, создание пользователей
     'django.contrib.contenttypes',  # работа с типами контента
     'django.contrib.sessions',  # управление сессиями (корзина, авторизация)
     'django.contrib.messages',  # вывод сообщений об операциях от сервера к клиенту
     'django.contrib.staticfiles',  # обработка статических файлов (CSS, JS, изображения)
+    'debug_toolbar',  # отладочный модуль (в админке)
     'rest_framework',  # добавляет библиотеку Django REST framework
     'rest_framework.authtoken',  # добавляет аутентификацию потокену для Django REST framework
     'easy_thumbnails',  # улучшение ImageField в models
     'social_django',  # авторизация через соцсети
-    'main',  # Наш проект
+    'drf_spectacular',  # Создание API схемы
+    'main.apps.MainConfig',  # Наш проект
+    'baton.autodiscover',  # апгрейд админки
 ]
 
 MIDDLEWARE = [
@@ -56,6 +61,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',  # для отладочного модуля
 ]
 
 ROOT_URLCONF = 'orders.urls'
@@ -132,6 +138,8 @@ REST_FRAMEWORK = {
         'user': '20/minute',
         'anon': '10/minute'
     },
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 AUTHENTICATION_BACKENDS = (
@@ -251,11 +259,11 @@ SOCIAL_AUTH_PIPELINE = (
 
     # Send a validation email to the user to verify its email address.
     # Disabled by default.
-    # 'social_core.pipeline.mail.mail_validation',
+    'social_core.pipeline.mail.mail_validation',
 
     # Associates the current social details with another user account with
     # a similar email address. Disabled by default.
-    # 'social_core.pipeline.social_auth.associate_by_email',
+    'social_core.pipeline.social_auth.associate_by_email',
 
     # Create a user account if we haven't found one yet.
     'social_core.pipeline.user.create_user',

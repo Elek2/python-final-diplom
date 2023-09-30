@@ -1,13 +1,28 @@
+import os
+
 import pytest
 from rest_framework.test import APIClient
 from model_bakery import baker
-from main.models import User
-import random
+from main.models import User, ProductInfo
+from rest_framework.authtoken.models import Token
+from django.conf import settings
+
+
+
 
 
 @pytest.fixture()
 def client():
     return APIClient()
+
+
+@pytest.fixture()
+def create_user_with_token():
+
+    user = baker.make(User, email='user@example.com')
+    token = baker.make(Token, user=user)
+
+    return user, token
 
 
 @pytest.fixture()
@@ -17,14 +32,6 @@ def user_factory():
 
     return factory
 
-
-# @pytest.fixture()
-# def stud_factory():
-#     def factory(*args, **kwargs):
-#         return baker.make(Student, *args, **kwargs)
-#
-#     return factory
-#
 #
 # @pytest.fixture()
 # def random_fixture():
@@ -35,140 +42,77 @@ def user_factory():
 #     return _random
 #
 #
-# проверка получения первого курса
+
 @pytest.mark.django_db
-def test_get_one_course(client):
-    registration_data = [
-        {'email': 'user_1@main.ru', 'password': '111'},
-        {'email': 'user_2@main.ru', 'password': '222'},
-        {'email': 'user_3@main.ru', 'password': '333'},
-    ]
+class TestUser:
 
-    for data in registration_data:
-        response = client.post(f'/api/v1/registration/', data=data)
-        assert response.status_code == 201
-        assert response.json()['email'] == data['email']
+    def test_user_register(self, client):
+        registration_data = [
+            {'email': 'user_1@main.ru', 'password': '111'},
+            {'email': 'user_2@main.ru', 'password': '222'},
+            {'email': 'user_3@main.ru', 'password': '333'},
+        ]
 
-    fail_registration_data = {'user': '123'}
-    response = client.post(f'/api/v1/registration/', data=fail_registration_data)
-    assert response.status_code == 400
+        for data in registration_data:
+            response = client.post(f'/api/v1/registration/', data=data)
+            assert response.status_code == 201
+            assert response.json()['email'] == data['email']
+
+        fail_registration_data = {'user': '123'}
+        response = client.post(f'/api/v1/registration/', data=fail_registration_data)
+        assert response.status_code == 400
+
+    def test_user_update(self, client, create_user_with_token):
+        user, token = create_user_with_token
+        user_token = token.key
+        user_id = user.id
+
+        update_user_data_1 = {
+            'username': 'Иван', 'last_name': 'Иванович', 'second_name': 'Иванович'}
+        headers = {'Authorization': f'Token {user_token}'}
+
+        response = client.put(
+            f"/api/v1/user/{user_id}/",
+            data=update_user_data_1,
+            headers=headers,
+        )
+        updated_user_username = User.objects.get(id=user_id).username
+
+        assert response.status_code == 200
+        assert updated_user_username == update_user_data_1['username']
+
+    def test_user_auth(self, client):
+        user = User.objects.create_user(email='user_8@main.ru', password='111')
+
+        update_user_data_1 = {
+            'email': user.email, 'password': '111'}
+
+        response = client.post(
+            "http://127.0.0.1:8000/api/v1/api-token-auth/",
+            data=update_user_data_1,
+        )
+
+        assert response.status_code == 200
+        assert response.json()['token'] == Token.objects.get(user=user).key
 
 
-# # проверка получения списка курсов
-# @pytest.mark.django_db
-# def test_get_list_course(client, course_factory):
-#     #  Arrange
-#     courses = course_factory(_quantity=10)
-#
-#     #  Act
-#     response = client.get('/api/v1/courses/')
-#
-#     # Assert
-#     assert response.status_code == 200
-#     data = response.json()
-#     for i, course in enumerate(data):
-#         assert course['name'] == courses[i].name
-#
-#
-# # проверка фильтрации по id
-# @pytest.mark.django_db
-# def test_course_id_filter(client, course_factory, random_fixture):
-#     #  Arrange
-#     courses = course_factory(_quantity=10)
-#     pos = random_fixture(courses)
-#
-#     #  Act
-#     response = client.get('/api/v1/courses/', {'id': pos})
-#
-#     # Assert
-#     assert response.status_code == 200
-#     assert response.json()[0]['id'] == pos
-#
-#
-# # проверка фильтрации по name
-# @pytest.mark.django_db
-# def test_course_name_filter(client, course_factory):
-#     #  Arrange
-#     courses = course_factory(_quantity=10)
-#     name_list = [course.name for course in courses]
-#     name = random.choice(name_list)
-#
-#     #  Act
-#     response = client.get('/api/v1/courses/', {'name': name})
-#
-#     # Assert
-#     assert response.status_code == 200
-#     assert response.json()[0]['name'] == name
-#
-#
-# # проверка создания курса
-# @pytest.mark.django_db
-# def test_create_course(client):
-#     count_before = Course.objects.count()  # Считаем кол-во сообщений (будет 0)
-#
-#     student = Student.objects.create(name='student_name')
-#
-#     response = client.post(
-#         '/api/v1/courses/',
-#         data={'name': 'course_name', 'students': [student.id]},
-#         format='json'
-#     )
-#
-#     count_after = Course.objects.count()  # Считаем кол-во сообщений после добавления (будет 1)
-#
-#     assert response.status_code == 201
-#     assert response.request['CONTENT_TYPE'] == 'application/json'
-#     assert count_after == count_before + 1
-#
-#
-# # проверка обновления курса
-# @pytest.mark.django_db
-# def test_put_course(client, course_factory, random_fixture):
-#     courses = course_factory(_quantity=10)
-#     pos = random_fixture(courses)
-#
-#     response = client.put(
-#         f'/api/v1/courses/{pos}/',
-#         data={'name': 'put_test', 'students': ''},
-#         format='json'
-#     )
-#
-#     assert response.status_code == 200
-#     assert response.json()['name'] == 'put_test'
-#
-#
-# # проверка удаления курса
-# @pytest.mark.django_db
-# def test_delete_course(client, course_factory, random_fixture):
-#     courses = course_factory(_quantity=10)
-#     pos = random_fixture(courses)
-#
-#     count_before = Course.objects.count()  # Считаем кол-во сообщений (будет 10)
-#
-#     response = client.delete(
-#         f'/api/v1/courses/{pos}/',
-#         format='json'
-#     )
-#
-#     count_after = Course.objects.count()  # Считаем кол-во сообщений (будет 9)
-#
-#     assert response.status_code == 204
-#     assert count_after == count_before - 1
-#
-#
-# # проверка максимального числа студентов
-# @pytest.mark.parametrize('students_count', [19, 20, 21])  # Проводим 3 теста для students_count=19,20,21
-# @pytest.mark.django_db
-# def test_max_students(client, settings, students_count):  # settings - фикстура доступа к settings.py
-#     students = [i for i in range(20)]  # Чтобы не создавать 20 сущностей, создаем список из 20 чисел
-#
-#     response = client.post(
-#         '/api/v1/courses/',
-#         data={'name': 'course_name', 'students': students},  # В курс добавляем 20 условных студентов
-#         format='json'
-#     )
-#
-#     settings.MAX_STUDENTS_PER_COURSE = students_count  # Переопределям макс. число студентов на 19,20,21 чел.
-#
-#     assert settings.MAX_STUDENTS_PER_COURSE <= 20
-#     assert response.status_code == 201
+@pytest.mark.django_db
+class TestGoods:
+
+    def test_goods_update(self, client, create_user_with_token):
+        user, token = create_user_with_token
+        user_token = token.key
+        shop_file = os.path.join(settings.BASE_DIR, 'data/shop1.yaml')
+        data = {'file': shop_file}
+        headers = {'Authorization': f'Token {user_token}'}
+
+        response = client.post(
+            "/api/v1/update/",
+            data=data,
+            headers=headers,
+        )
+
+        product = ProductInfo.objects.get(price='110000')
+
+        assert response.status_code == 200
+        assert product.quantity == 14

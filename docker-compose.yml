@@ -10,6 +10,8 @@ services:
     depends_on:
       - db
       - redis
+    environment:
+      WAIT_HOSTS: db:${ENV_DB_PORT}
     volumes:
       - .:/app
     command: sh -c "python manage.py migrate && gunicorn orders.wsgi:application --bind 0.0.0.0:8000"
@@ -42,14 +44,17 @@ services:
   celery:
     build:
       context: .
-      dockerfile: Dockerfile-celery
+      dockerfile: Dockerfile
     env_file:
       - .env.docker
     depends_on:
       - db
       - redis
+    environment:
+      WAIT_HOSTS: db:${ENV_DB_PORT}
     command: celery -A orders worker -l info
 
+  # Контейнер с админкой PostgreSQL
   pgadmin:
       image: dpage/pgadmin4:latest
       env_file:
@@ -64,7 +69,20 @@ services:
         - "db:pgsql-server"
       depends_on:
           - db
-#      networks:
-#        dev_network:
-#          aliases:
-#            - pdadmi
+
+  # Контейнер с тестами
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env.docker
+    environment:
+#      API_URL: ${API_URL}
+      WAIT_HOSTS: db:${ENV_DB_PORT}
+    depends_on:
+      - django
+      - celery
+      - db
+
+    command: pytest -s

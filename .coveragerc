@@ -1,0 +1,2 @@
+[run]
+omit=tests/*, data/*, reference/*, client.py, manage.py, orders\wsgi.py, orders\pipelines.py
