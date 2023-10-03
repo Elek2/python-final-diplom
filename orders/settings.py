@@ -150,12 +150,19 @@ AUTHENTICATION_BACKENDS = (
 
 SOCIAL_AUTH_VK_OAUTH2_KEY = os.getenv('VK_KEY')
 SOCIAL_AUTH_VK_OAUTH2_SECRET = os.getenv('VK_SECRET')
+SOCIAL_AUTH_VK_OAUTH2_SCOPE = ['email',]
 
 SOCIAL_AUTH_GITHUB_KEY = os.getenv('GITHUB_KEY')
 SOCIAL_AUTH_GITHUB_SECRET = os.getenv('GITHUB_SECRET')
+SOCIAL_AUTH_GITHUB_SCOPE = ['email']
 
 SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
 SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = ['email']
+SOCIAL_AUTH_USER_MODEL = 'main.User'  # указываем Django использовать нашу модель User вместо стандартной
+USER_FIELDS=['email']
+
+# Разрешаем создавать пользователей через social_auth
+SOCIAL_AUTH_CREATE_USERS = True
 
 LOGIN_URL = 'auth'
 LOGIN_REDIRECT_URL = 'basket'
@@ -231,8 +238,7 @@ LOGGING = {
     },
 }
 
-# Разрешаем создавать пользователей через social_auth
-SOCIAL_AUTH_CREATE_USERS = True
+
 
 SOCIAL_AUTH_PIPELINE = (
     # Get the information we can about the user and return it in a simple
@@ -255,7 +261,7 @@ SOCIAL_AUTH_PIPELINE = (
 
     # Make up a username for this person, appends a random string at the end if
     # there's any collision.
-    # 'social_core.pipeline.user.get_username',
+    'social_core.pipeline.user.get_username',
 
     # Send a validation email to the user to verify its email address.
     # Disabled by default.

@@ -2,6 +2,7 @@ from django.contrib.auth.base_user import BaseUserManager
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from slugify import slugify
+from social_django.models import UserSocialAuth
 
 """
 Про создание баз данных.
@@ -24,11 +25,16 @@ class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError("Поле email должно быть заполнено")
-        if not password:
-            raise ValueError("Поле password должно быть заполнено")
+        # if not password:
+        #     raise ValueError("Поле password должно быть заполнено")
         email = self.normalize_email(email)
-        user = self.model(email=email, password=password, **extra_fields)
-        user.set_password(password)
+        user = self.model(email=email, **extra_fields)
+        if password:
+            user.set_password(password)
+        else:
+            # Пароль не устанавливается для социальной аутентификации
+            user.set_unusable_password()
+
         user.save(using=self._db)
         return user
 

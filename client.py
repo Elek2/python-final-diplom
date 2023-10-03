@@ -154,7 +154,7 @@ if __name__ == "__main__":
     headers_user_data_1 = {'Authorization': f'Token f22fa9e06096d14da179f8e4a6ea0342431ae4cb',}
         # 'Content-Type': 'multipart/form-data'}
 
-    registration_data_1 = {'email': 'user_14@main.ru', 'password': '111'}
+    registration_data_1 = {'email': 'user_167@main.ru', 'password': '111'}
     registration_data_2 = {'email': 'user_3@main.ru', 'password': '222'}
     auth_data_1 = {'email': 'user_8@main.ru', 'password': '111'}
     auth_data_2 = {'email': 'user_3@main.ru', 'password': '222'}
@@ -184,7 +184,7 @@ if __name__ == "__main__":
 
     # order_confirm_data_2 = {"contact": {"id": "1"}}
 
-    # registration(registration_data_1)
+    registration(registration_data_1)
     # registration(registration_data_2)
     # auth(auth_data_1)
     # auth(auth_data_2)
@@ -192,7 +192,7 @@ if __name__ == "__main__":
     # update(headers_1, data_3)
     # update(headers_2, data_2)
     # show_products(headers_1)
-    add_order_to_basket(headers_1, order_data)
+    # add_order_to_basket(headers_1, order_data)
     # change_basket(headers_1, order_change_data)
     # delete_item_basket(headers_1, order_delete_data)
     # get_basket(headers_1)

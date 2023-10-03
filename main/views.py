@@ -2,6 +2,7 @@ from collections import OrderedDict
 
 from django.shortcuts import render
 from rest_framework.permissions import IsAuthenticated
+from social_django.utils import psa
 
 from .permissions import IsOwner
 from .tasks import send_registration_email, download_and_save_image
