@@ -78,8 +78,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'social_django.context_processors.backends',
-                'social_django.context_processors.login_redirect',
+                'social_django.context_processors.backends',  # авторизация через соцсети
+                'social_django.context_processors.login_redirect',  # авторизация через соцсети
             ],
         },
     },
@@ -124,10 +124,11 @@ AUTH_USER_MODEL = 'main.User'  # указываем Django использова�
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',  # Добавление аутеницификации по токену по умолчанию
+        'rest_framework.authentication.SessionAuthentication',  # Добавление аутеницификации сессии по умолчанию
     ],
     'DEFAULT_PERMISSION_CLASSES': [
+        # По умолчанию в каждом View пользователь должен быть авторизирован
         'rest_framework.permissions.IsAuthenticated'
     ],
     'DEFAULT_THROTTLE_CLASSES': [
@@ -138,8 +139,8 @@ REST_FRAMEWORK = {
         'user': '20/minute',
         'anon': '10/minute'
     },
-    'TEST_REQUEST_DEFAULT_FORMAT': 'json',
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'TEST_REQUEST_DEFAULT_FORMAT': 'json',  # для модуля test
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',  # Создание API схемы
 }
 
 AUTHENTICATION_BACKENDS = (
@@ -150,7 +151,7 @@ AUTHENTICATION_BACKENDS = (
 
 SOCIAL_AUTH_VK_OAUTH2_KEY = os.getenv('VK_KEY')
 SOCIAL_AUTH_VK_OAUTH2_SECRET = os.getenv('VK_SECRET')
-SOCIAL_AUTH_VK_OAUTH2_SCOPE = ['email',]
+SOCIAL_AUTH_VK_OAUTH2_SCOPE = ['email']
 
 SOCIAL_AUTH_GITHUB_KEY = os.getenv('GITHUB_KEY')
 SOCIAL_AUTH_GITHUB_SECRET = os.getenv('GITHUB_SECRET')
@@ -159,13 +160,13 @@ SOCIAL_AUTH_GITHUB_SCOPE = ['email']
 SOCIAL_AUTH_USERNAME_IS_FULL_EMAIL = True
 SOCIAL_AUTH_ADMIN_USER_SEARCH_FIELDS = ['email']
 SOCIAL_AUTH_USER_MODEL = 'main.User'  # указываем Django использовать нашу модель User вместо стандартной
-USER_FIELDS=['email']
+USER_FIELDS = ['email']
 
 # Разрешаем создавать пользователей через social_auth
 SOCIAL_AUTH_CREATE_USERS = True
 
-LOGIN_URL = 'auth'
-LOGIN_REDIRECT_URL = 'basket'
+LOGIN_URL = 'auth'  # страница авторизации чз соцсеть
+LOGIN_REDIRECT_URL = 'basket'  # после авторизации чз соцсеть автоматически перенаправляем пользователя
 
 # Определяем способ отправки электронной почты
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # для отправки писем в консоль (для тестов)
@@ -192,7 +193,7 @@ USE_L10N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
+# # устанавливает URL для управления статик файлами (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 STATIC_URL = '/static/'
 
@@ -238,8 +239,7 @@ LOGGING = {
     },
 }
 
-
-
+# пайплайны для авторизации через соцсети. соответствуют функциям обработки  модуля social_core.pipeline
 SOCIAL_AUTH_PIPELINE = (
     # Get the information we can about the user and return it in a simple
     # format to create the user instance later. In some cases the details are

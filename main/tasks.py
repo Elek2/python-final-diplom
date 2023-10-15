@@ -1,13 +1,13 @@
-from PIL import Image
+import requests
 from celery import shared_task
+from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.files import File
 from django.core.files.base import ContentFile
 from django.core.mail import send_mail
-from django.conf import settings
-from django.core.exceptions import ValidationError
-import requests
 from django.http import JsonResponse
 from easy_thumbnails.files import generate_all_aliases
+from PIL import Image
 
 from main.models import User
 

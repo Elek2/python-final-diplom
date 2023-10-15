@@ -1,14 +1,12 @@
 import os
 
 import pytest
-from rest_framework.test import APIClient
-from model_bakery import baker
-from main.models import User, ProductInfo
-from rest_framework.authtoken.models import Token
 from django.conf import settings
+from model_bakery import baker
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient
 
-
-
+from main.models import ProductInfo, User
 
 
 @pytest.fixture()

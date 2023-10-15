@@ -1,17 +1,12 @@
 from collections import OrderedDict
 
-from django.shortcuts import render
-from rest_framework.permissions import IsAuthenticated
-from social_django.utils import psa
-
-from .permissions import IsOwner
-from .tasks import send_registration_email, download_and_save_image
 import requests
 import yaml
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import F, Sum
 from django.db.utils import IntegrityError
-from django.http import JsonResponse, HttpResponseBadRequest
+from django.http import JsonResponse
+from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -21,33 +16,38 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from main.serializers import (BasketListSerializer, BasketSerializer,
                               ContactSerializer, OrderSerializer,
-                              ProductInfoSerializer,
-                              UserAuthTokenSerializer,
-                              ProductInfoDetailSerializer, UserSerializer, RegistrationSerializer)
+                              ProductInfoDetailSerializer,
+                              ProductInfoSerializer, RegistrationSerializer,
+                              UserAuthTokenSerializer, UserSerializer)
 
 from .models import (Category, Contact, Order, OrderItem, Product, ProductInfo,
                      ProductParameter, Shop, User)
+from .permissions import IsOwner
+from .tasks import download_and_save_image, send_registration_email
 
 
+# темплейт для авторизации через соцсети
 def auth(request):
     return render(request, 'oauth.html')
 
 
+# CreateAPIView - View только для создания (преднастроен метод post)
 class RegistrationView(CreateAPIView):
     """
     Регистрация пользователя
     """
 
-    queryset = User.objects.all()
-    serializer_class = RegistrationSerializer
+    queryset = User.objects.all()  # определение базы (списка) данных
+    serializer_class = RegistrationSerializer  # определение сериализатора
+    # в settings установлен доступ только для авторизированных пользователей. Чтобы дать доступ всем, используем:
     permission_classes = []
 
+    # переопределяем стандартный метод post
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-
-        if serializer.is_valid():
+        serializer = self.get_serializer(data=request.data)  # получаем RegistrationSerializer из serializer_class
+        if serializer.is_valid():  # обязательный метод перед serializer.save()
             try:
-                user = serializer.save()
+                user = serializer.save()  # вызывает метод create сериализатора
             except IntegrityError as error:
                 email = request.data.get('email')
                 if User.objects.get(email=email):
@@ -59,7 +59,7 @@ class RegistrationView(CreateAPIView):
 
         # Отправка сообщения об успешной регистрации на email пользователя
         # Используем celery (метод delay)
-        send_registration_email.delay(user.email, request.data["password"])
+        # send_registration_email.delay(user.email, request.data["password"])
 
         response_data = {
             'message': 'Регистрация успешно завершена.',
@@ -75,29 +75,27 @@ class UserUpdateView(RetrieveUpdateAPIView):
 
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    # permission_classes = []
-    # parser_classes = [MultiPartParser]
 
     def put(self, request, *args, **kwargs):
         """
         Изменение данных пользователя
         """
-
+        # переменная instance - предопреденная для изменения конкретного объекта
         instance = User.objects.get(id=request.user.id)
-
-        data = request.data.copy()
+        data = request.data.copy()  # request.data запрещено изменять, для этого copy()
         image_file = data.pop('image', None)
         if image_file:
-            image_file = image_file[0]
+            image_file = image_file[0]  # data.pop() получает список, переводим в строку
         serializer = self.get_serializer(instance, data=data)
         if serializer.is_valid():
             try:
-                serializer.save()
+                serializer.save()  # вызывает метод update() сериализатора если передан instance, иначе - create()
             except IntegrityError as error:
                 return JsonResponse({'Status': False, 'Errors': str(error)})
         else:
             return JsonResponse({'Status': False, 'Errors': 'Неверный формат запроса'})
 
+        # Загружаем/изменяем аватар пользователя. Используем celery (метод delay)
         if image_file:
             download_and_save_image.delay(
                 model=User,
@@ -111,6 +109,8 @@ class UserUpdateView(RetrieveUpdateAPIView):
         }
         return JsonResponse(response_data)
 
+    # предопределяемый метод - может изменять данные только сам пользователь
+    # по умолчанию APIView берет данные из permission_classes
     def get_permissions(self):
         """Получение прав для действий."""
         return [IsOwner()]
@@ -125,25 +125,29 @@ class CustomAuthToken(ObtainAuthToken):
         serializer = UserAuthTokenSerializer(
             data=request.data,
             context={'request': request})
-        serializer.is_valid(raise_exception=True)
+        serializer.is_valid(raise_exception=True)  # raise_exception вызывает ValidationError при ошибке
         user = serializer.validated_data['user']
+        # get_or_create возвращает список из токена и bool-переменной создан объект или нет
         token, created = Token.objects.get_or_create(user=user)
         return JsonResponse({'token': token.key})
 
 
 class PartnerUpdate(APIView):
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         """
          Обновление товаров в базе
          """
 
+        # можно товары передавать в виде файла или в виде url
         url = request.data.get('url')
         file = request.data.get('file')
         if url:
             response = requests.get(url)
             if response.status_code == 200:
                 stream = requests.get(url).content
+            else:
+                return JsonResponse({'Status': False, 'Errors': 'URL не содержит информации'})
         elif file:
             file = request.data.get('file')
             stream = open(file, mode='r', encoding='utf-8')
@@ -152,8 +156,7 @@ class PartnerUpdate(APIView):
 
         try:
             data = yaml.load(stream, Loader=yaml.Loader)
-
-            shop, _ = Shop.objects.get_or_create(
+            shop, created = Shop.objects.get_or_create(
                 name=data['shop'],
                 shop_user=request.user,
             )
@@ -195,12 +198,11 @@ class PartnerUpdate(APIView):
                     product=new_product
                 )
                 for param_name, param_value in product['parameters'].items():
-                    new_product_params = ProductParameter.objects.create(
+                    ProductParameter.objects.create(
                         name=param_name,
                         value=param_value,
                         product_info=new_product_info
                     )
-
         except Exception:
             return JsonResponse({'Status': False, 'Errors': 'Неверный формат данных'})
 
@@ -218,7 +220,11 @@ class ProductInfoViewSet(ReadOnlyModelViewSet):
     filterset_fields = ['shop', 'model', 'product']
     permission_classes = []
 
+    # ModelViewSet автоматически определяет сериализатор, но если надо переопределить, вызываем
+    # get_serializer_class() класса GenericAPIView
     def get_serializer_class(self):
+        # self.action - встроенная переменная классов View и ViewSetMixin, в которою передается
+        # параметр запроса, например "get":"list", "put":"retrieve"
         if self.action == 'retrieve':
             return ProductInfoDetailSerializer
         return self.serializer_class
@@ -233,14 +239,26 @@ class BasketView(APIView):
         """
         Получение данных корзины пользователя
         """
-
+        # prefetch_related используется для загрузки таблиц, ссылающихся на нашу через ForeignKey и related_name
+        # annotate позволяет использовать функции для загрузки доп значений
+        # Sum() - функцияия сложения значений полей
+        # F() представляет значение поля модели или аннотированного столбца
+        # distinct() - убирает повторения из запроса
         basket = Order.objects.filter(
             user_id=request.user.id, status='basket').prefetch_related(
             'ordered_items__product__product_info',
         ).annotate(
             total_sum=Sum(F('ordered_items__quantity') * F('ordered_items__product__product_info__price'))).distinct()
 
-        serializer = BasketListSerializer(basket, many=True)
+        # many=True - сериализовать подряд несколько значений
+        # либо передаем в serializer instance
+        serializer = BasketListSerializer(instance=basket, many=True)
+        # либо передаем в serializer data и валидируем
+        # serializer = BasketListSerializer(data=basket, many=True)
+        # serializer.is_valid()
+
+        # safe=False - можно сериализовать не только данные вида dict, в нашем случае мы
+        # можем передать несколько значений, значит, будет list
         return JsonResponse(serializer.data, safe=False)
 
     def post(self, request, *args, **kwargs):
@@ -248,13 +266,13 @@ class BasketView(APIView):
          Добавление товаров в корзину
          """
 
+        # новые товары передаются в ключе 'items'
         items_data = request.data.get('items')
         if items_data:
-            basket, _ = Order.objects.get_or_create(user=request.user, status='basket')
+            basket, created = Order.objects.get_or_create(user=request.user, status='basket')
             for item in items_data:
                 item.update({'order': basket.id})
                 serializer = BasketSerializer(data=item)
-
                 if serializer.is_valid():
                     try:
                         serializer.save()
@@ -312,16 +330,21 @@ class OrderView(APIView):
     Класс для работы с заказами пользователя
     """
 
+    # для добавления разделителей разрядов (запятых), и замена запятых на пробел. напр. 1000000->1 000 000
     def format_price(self, price):
         return '{:,}'.format(price).replace(',', ' ')
 
     def show_result(self, order: Order) -> OrderedDict:
         ordered_items = OrderItem.objects.filter(order=order)
 
+        # данные в словаре dict неупорядочены, обычно ключи выводятся по алфавиту
+        # в OrderedDict упорядочены, для удобного отображения пользователю
         response_data = OrderedDict()
         response_data['Данные заказа'] = {
-            'Номер заказа': order.id,
+            'Номер заказа': order.pk,
             'Дата создания': order.dt.strftime("%d.%m.%Y"),
+            # get_status_display() используется для получения "читаемого" представления поля с выбором status
+            # например вместо 'basket' выведет 'В корзине'
             'Статус': order.get_status_display(),
         }
 
@@ -379,6 +402,7 @@ class OrderView(APIView):
         except ObjectDoesNotExist:
             return JsonResponse({'Status': False, 'Errors': 'В корзине нет товаров'})
 
+        # при заказе товаров пользователь должен указать контактные данные для доставки
         contact_data = request.data.get('contact')
         if contact_data:
             contact_data.update({'user': request.user.id})

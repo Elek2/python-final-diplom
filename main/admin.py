@@ -1,8 +1,7 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin
-from django.contrib import messages
-from django.forms import BaseInlineFormSet
 from django.core.exceptions import ValidationError
+from django.forms import BaseInlineFormSet
 
 from . import models
 

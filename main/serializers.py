@@ -9,12 +9,13 @@ class RegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('email', 'password',)
-        read_only_fields = ('id',)
-        extra_kwargs = {
-            'first_name': {'required': False},
-            'last_name': {'required': False},
-        }
+        # read_only_fields = ('id',)
+        # extra_kwargs = {
+        #     'first_name': {'required': False},
+        #     'last_name': {'required': False},
+        # }
 
+    # переопределяем стандартный метод create чтобы устанавливать шифрованный пароль
     def create(self, validated_data):
         user = super().create(validated_data)
         user.set_password(validated_data.get('password'))
@@ -32,6 +33,10 @@ class UserAuthTokenSerializer(serializers.Serializer):
     email = serializers.EmailField(write_only=True)
     password = serializers.CharField(write_only=True, style={'input_type': 'password'})
 
+    # встроенный метод, вызываемый внутри .is_valid(). Сам по себе ничего не делает
+    # def validate(self, attrs):
+    #   return attrs
+    # переопределяем чтобы получить доп. валидацию. в attrs уже валидированные поля email, password
     def validate(self, attrs):
         email = attrs.get('email')
         password = attrs.get('password')
